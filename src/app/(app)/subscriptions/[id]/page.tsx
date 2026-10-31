@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { formatMoney, formatDate, formatDateTime } from '@/lib/format';
 import { toast } from '@/components/ui/toast';
+import { useAuth } from '@/lib/auth-context';
 import {
   ArrowLeft,
   Calendar,
@@ -38,6 +39,7 @@ import {
 function SubscriptionDetailContent() {
   const params = useParams();
   const subId = Array.isArray(params.id) ? params.id[0] : (params.id as string);
+  const { isCustomer } = useAuth();
 
   const [sub, setSub] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -192,7 +194,7 @@ function SubscriptionDetailContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {sub.status === 'DRAFT' && (
+          {!isCustomer && sub.status === 'DRAFT' && (
             <Button
               variant="primary"
               size="sm"
@@ -206,14 +208,16 @@ function SubscriptionDetailContent() {
 
           {sub.status === 'QUOTATION' && (
             <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleTransition('DRAFT')}
-                isLoading={actionLoading}
-              >
-                Back to Draft
-              </Button>
+              {!isCustomer && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleTransition('DRAFT')}
+                  isLoading={actionLoading}
+                >
+                  Back to Draft
+                </Button>
+              )}
               <Button
                 variant="primary"
                 size="sm"
@@ -226,7 +230,7 @@ function SubscriptionDetailContent() {
             </>
           )}
 
-          {sub.status === 'CONFIRMED' && (
+          {!isCustomer && sub.status === 'CONFIRMED' && (
             <Button
               variant="primary"
               size="sm"
@@ -240,69 +244,81 @@ function SubscriptionDetailContent() {
 
           {sub.status === 'ACTIVE' && (
             <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleTransition('PAUSED')}
-                isLoading={actionLoading}
-                className="gap-1.5 text-[#C2410C]"
-              >
-                <Pause className="w-3.5 h-3.5" /> Pause Billing
-              </Button>
+              {(!isCustomer || sub.plan?.canPause) && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleTransition('PAUSED')}
+                  isLoading={actionLoading}
+                  className="gap-1.5 text-[#C2410C]"
+                >
+                  <Pause className="w-3.5 h-3.5" /> Pause Billing
+                </Button>
+              )}
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleRenew}
-                isLoading={actionLoading}
-                className="gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Renew Contract
-              </Button>
+              {!isCustomer && (
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleRenew}
+                    isLoading={actionLoading}
+                    className="gap-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Renew Contract
+                  </Button>
 
-              <Button
-                variant="accent"
-                size="sm"
-                onClick={handleGenerateInvoiceNow}
-                isLoading={actionLoading}
-                className="gap-1.5"
-              >
-                <FileCheck className="w-3.5 h-3.5" /> Generate Invoice Now
-              </Button>
+                  <Button
+                    variant="accent"
+                    size="sm"
+                    onClick={handleGenerateInvoiceNow}
+                    isLoading={actionLoading}
+                    className="gap-1.5"
+                  >
+                    <FileCheck className="w-3.5 h-3.5" /> Generate Invoice Now
+                  </Button>
+                </>
+              )}
 
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmCloseOpen(true)}
-                isLoading={actionLoading}
-                className="gap-1.5"
-              >
-                <XCircle className="w-3.5 h-3.5" /> Close Subscription
-              </Button>
+              {(!isCustomer || sub.plan?.canCloseEarly) && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setConfirmCloseOpen(true)}
+                  isLoading={actionLoading}
+                  className="gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5" /> Close Subscription
+                </Button>
+              )}
             </>
           )}
 
           {sub.status === 'PAUSED' && (
             <>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => handleTransition('ACTIVE')}
-                isLoading={actionLoading}
-                className="gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" /> Resume Subscription
-              </Button>
+              {(!isCustomer || sub.plan?.canPause) && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleTransition('ACTIVE')}
+                  isLoading={actionLoading}
+                  className="gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" /> Resume Subscription
+                </Button>
+              )}
 
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setConfirmCloseOpen(true)}
-                isLoading={actionLoading}
-                className="gap-1.5"
-              >
-                <XCircle className="w-3.5 h-3.5" /> Close Subscription
-              </Button>
+              {(!isCustomer || sub.plan?.canCloseEarly) && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setConfirmCloseOpen(true)}
+                  isLoading={actionLoading}
+                  className="gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5" /> Close Subscription
+                </Button>
+              )}
             </>
           )}
         </div>

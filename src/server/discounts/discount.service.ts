@@ -120,33 +120,36 @@ export class DiscountService {
       if (existing) throw AppError.conflict('A discount with this code already exists');
     }
 
-    const row = await prisma.$transaction(async (tx) => {
-      const created = await tx.discount.create({
-        data: {
-          name: data.name.trim(),
-          code: data.code ?? null,
-          type: data.type,
-          value: data.value,
-          scope: data.scope,
-          minPurchase: data.minPurchase ?? null,
-          minQuantity: data.minQuantity ?? null,
-          startDate: toCalendarDate(data.startDate),
-          endDate: data.endDate ? toCalendarDate(data.endDate) : null,
-          maxUses: data.maxUses ?? null,
-          autoApply: data.autoApply ?? false,
-          products: data.productIds?.length
-            ? { create: data.productIds.map((pid) => ({ productId: pid })) }
-            : undefined,
-        },
-        include: INCLUDE,
-      });
+    const row = await prisma.$transaction(
+      async (tx) => {
+        const created = await tx.discount.create({
+          data: {
+            name: data.name.trim(),
+            code: data.code ?? null,
+            type: data.type,
+            value: data.value,
+            scope: data.scope,
+            minPurchase: data.minPurchase ?? null,
+            minQuantity: data.minQuantity ?? null,
+            startDate: toCalendarDate(data.startDate),
+            endDate: data.endDate ? toCalendarDate(data.endDate) : null,
+            maxUses: data.maxUses ?? null,
+            autoApply: data.autoApply ?? false,
+            products: data.productIds?.length
+              ? { create: data.productIds.map((pid) => ({ productId: pid })) }
+              : undefined,
+          },
+          include: INCLUDE,
+        });
 
-      await recordAuditLog(
-        { actorId, entity: 'discount', entityId: created.id, action: 'create_discount', meta: { name: created.name } },
-        tx
-      );
-      return created;
-    });
+        await recordAuditLog(
+          { actorId, entity: 'discount', entityId: created.id, action: 'create_discount', meta: { name: created.name } },
+          tx
+        );
+        return created;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
     return serialise(row);
   }
@@ -173,42 +176,45 @@ export class DiscountService {
     const existing = await prisma.discount.findUnique({ where: { id } });
     if (!existing) throw AppError.notFound('Discount not found');
 
-    const row = await prisma.$transaction(async (tx) => {
-      // Replace product list if provided
-      if (data.productIds !== undefined) {
-        await tx.discountProduct.deleteMany({ where: { discountId: id } });
-        if (data.productIds.length > 0) {
-          await tx.discountProduct.createMany({
-            data: data.productIds.map((pid) => ({ discountId: id, productId: pid })),
-          });
+    const row = await prisma.$transaction(
+      async (tx) => {
+        // Replace product list if provided
+        if (data.productIds !== undefined) {
+          await tx.discountProduct.deleteMany({ where: { discountId: id } });
+          if (data.productIds.length > 0) {
+            await tx.discountProduct.createMany({
+              data: data.productIds.map((pid) => ({ discountId: id, productId: pid })),
+            });
+          }
         }
-      }
 
-      const updated = await tx.discount.update({
-        where: { id },
-        data: {
-          ...(data.name !== undefined ? { name: data.name.trim() } : {}),
-          ...(data.code !== undefined ? { code: data.code } : {}),
-          ...(data.type !== undefined ? { type: data.type } : {}),
-          ...(data.value !== undefined ? { value: data.value } : {}),
-          ...(data.scope !== undefined ? { scope: data.scope } : {}),
-          ...(data.minPurchase !== undefined ? { minPurchase: data.minPurchase } : {}),
-          ...(data.minQuantity !== undefined ? { minQuantity: data.minQuantity } : {}),
-          ...(data.startDate !== undefined ? { startDate: toCalendarDate(data.startDate) } : {}),
-          ...(data.endDate !== undefined ? { endDate: data.endDate ? toCalendarDate(data.endDate) : null } : {}),
-          ...(data.maxUses !== undefined ? { maxUses: data.maxUses } : {}),
-          ...(data.autoApply !== undefined ? { autoApply: data.autoApply } : {}),
-          ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
-        },
-        include: INCLUDE,
-      });
+        const updated = await tx.discount.update({
+          where: { id },
+          data: {
+            ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+            ...(data.code !== undefined ? { code: data.code } : {}),
+            ...(data.type !== undefined ? { type: data.type } : {}),
+            ...(data.value !== undefined ? { value: data.value } : {}),
+            ...(data.scope !== undefined ? { scope: data.scope } : {}),
+            ...(data.minPurchase !== undefined ? { minPurchase: data.minPurchase } : {}),
+            ...(data.minQuantity !== undefined ? { minQuantity: data.minQuantity } : {}),
+            ...(data.startDate !== undefined ? { startDate: toCalendarDate(data.startDate) } : {}),
+            ...(data.endDate !== undefined ? { endDate: data.endDate ? toCalendarDate(data.endDate) : null } : {}),
+            ...(data.maxUses !== undefined ? { maxUses: data.maxUses } : {}),
+            ...(data.autoApply !== undefined ? { autoApply: data.autoApply } : {}),
+            ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+          },
+          include: INCLUDE,
+        });
 
-      await recordAuditLog(
-        { actorId, entity: 'discount', entityId: id, action: 'update_discount', meta: data },
-        tx
-      );
-      return updated;
-    });
+        await recordAuditLog(
+          { actorId, entity: 'discount', entityId: id, action: 'update_discount', meta: data },
+          tx
+        );
+        return updated;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
     return serialise(row);
   }
@@ -236,10 +242,12 @@ export class DiscountService {
       where: {
         isActive: true,
         startDate: { lte: invoiceDate },
-        OR: [{ endDate: null }, { endDate: { gte: invoiceDate } }],
-        ...(attachedDiscountId
-          ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] }
-          : { autoApply: true }),
+        AND: [
+          { OR: [{ endDate: null }, { endDate: { gte: invoiceDate } }] },
+          attachedDiscountId
+            ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] }
+            : { autoApply: true },
+        ],
       },
       include: INCLUDE,
     });

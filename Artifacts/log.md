@@ -195,6 +195,23 @@
   - Catalog: Products CRUD, Variants CRUD with +560 Odoo brand surcharge verification (`effectivePrice = 1760.00`), Plans with 4 lifecycle policy flags, Quotation Templates with line items, Tax rules (GST 18% default), and Payment Terms (Net 30 default).
 - Verified full test suite: 7 test files, 44 tests passed with 0 errors.
 
+### 2026-10-31 · M1 · AUDIT & FIX · Member M2 Implementation Verification & E2E Testing (25/25 E2E + 81/81 Unit Passing)
+- Audited Member M2's implementation across Modules 3 (Subscriptions Lifecycle), 4 (Billing Day Engine & Invoicing), and 5 (Discounts & Pricing):
+  - Fixed sequence numbering deadlock: Updated `nextVal`, `nextSubNumber`, and `nextInvoiceNumber` to accept transaction client `tx` to avoid nested interactive transactions.
+  - Fixed surcharge double-counting: Removed redundant addition of `priceSurcharge` in `formatSub` and `billing.service.ts` (unit price in lines already stores the effective price).
+  - Fixed transaction timeouts under remote WAN latency: Pre-fetched catalog lookups outside transactions in `SubscriptionService.create` and moved post-commit full includes outside transaction boundaries, reducing transaction lock times from ~30s to <500ms.
+  - Fixed discount route RBAC & pagination envelopes: Enabled `STAFF` role access for discount views, and standardized response envelopes to `{ data, meta }` with `paginated()`.
+  - Fixed billing run idempotency: Corrected `BillingService.run` to target explicitly provided `subscriptionIds` without filtering out already-billed cycles, gracefully reporting `skipped` count.
+- Authored and ran `tests/e2e-m2-audit.test.ts` (25/25 tests passing):
+  - Verified discounts CRUD, scope application, and max usage increments.
+  - Verified subscription creation, line calculations, DRAFT updates, and complete state machine: `DRAFT → QUOTATION → CONFIRMED → ACTIVE → PAUSED → ACTIVE`.
+  - Verified 409 CONFLICT on illegal state leaps and plan policy enforcement (`canPause: false`).
+  - Verified renewal extending expiry by billing interval.
+  - Verified billing day batch runner (`POST /api/v1/billing/run`), idempotency check (0 created, 1+ skipped on re-run), and auto-close sweep (`POST /api/v1/billing/auto-close`).
+  - Verified invoice lifecycle: retrieval, confirmation, mock email send, printable structure, and cancellation.
+- Verified test suite: 10 unit test files (81/81 passing) + E2E suite (25/25 passing).
+- Verified Next.js production build (`npm run build`): 53 routes compiled cleanly with 0 TypeScript errors.
+
 <!-- Append new entries below this line -->
 
 ---

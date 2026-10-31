@@ -36,6 +36,7 @@ interface NavItem {
   icon: React.ElementType;
   adminOnly?: boolean;
   staffOnly?: boolean;
+  staffOrAdminOnly?: boolean;
 }
 
 interface NavSection {
@@ -46,7 +47,7 @@ interface NavSection {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, isAdmin, isStaff, logout } = useAuth();
+  const { user, isAdmin, isStaff, isCustomer, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingModalOpen, setBillingModalOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -71,10 +72,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     {
       title: 'SALES',
       items: [
-        { label: 'Customers', href: '/customers', icon: Users },
+        { label: 'Customers', href: '/customers', icon: Users, staffOrAdminOnly: true },
         { label: 'Subscriptions', href: '/subscriptions', icon: Repeat },
         { label: 'Invoices', href: '/invoices', icon: FileText },
-        { label: 'Payments', href: '/payments', icon: CreditCard },
+        { label: 'Payments', href: '/payments', icon: CreditCard, staffOrAdminOnly: true },
       ],
     },
     {
@@ -124,12 +125,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#171717] text-white">
         <Logo size="sm" inverted />
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setBillingModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FFC83D] text-[#0E0E0E] text-xs font-bold"
-          >
-            <Play className="w-3 h-3 fill-current" /> Billing
-          </button>
+          {(isAdmin || isStaff) && (
+            <button
+              onClick={() => setBillingModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FFC83D] text-[#0E0E0E] text-xs font-bold"
+            >
+              <Play className="w-3 h-3 fill-current" /> Billing
+            </button>
+          )}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 text-[#A3A3A3] hover:text-white"
@@ -167,6 +170,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <div className="space-y-1">
                     {section.items.map((item) => {
                       if (item.adminOnly && !isAdmin) return null;
+                      if (item.staffOrAdminOnly && !isAdmin && !isStaff) return null;
                       const active = isItemActive(item.href);
                       const Icon = item.icon;
 
@@ -203,23 +207,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Bottom Sidebar: Billing Card & User Info */}
         <div className="space-y-4 pt-4 border-t border-[#232323]">
           {/* Quick Trigger Billing Day Card */}
-          <div className="p-3.5 rounded-2xl bg-[#232323] border border-[#2D2D2D] text-left space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#FFC83D]">
-                Billing Day
-              </span>
-              <span className="h-2 w-2 rounded-full bg-[#16A34A] animate-pulse" />
+          {(isAdmin || isStaff) && (
+            <div className="p-3.5 rounded-2xl bg-[#232323] border border-[#2D2D2D] text-left space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#FFC83D]">
+                  Billing Day
+                </span>
+                <span className="h-2 w-2 rounded-full bg-[#16A34A] animate-pulse" />
+              </div>
+              <p className="text-[11px] text-[#A3A3A3] leading-snug">
+                Batch create due invoices across active subscriptions.
+              </p>
+              <button
+                onClick={() => setBillingModalOpen(true)}
+                className="w-full h-8 flex items-center justify-center gap-1.5 rounded-full bg-[#FFC83D] text-[#0E0E0E] text-xs font-bold hover:bg-[#FFB703] transition-colors cursor-pointer select-none"
+              >
+                <Play className="w-3 h-3 fill-current" /> Run Billing Batch
+              </button>
             </div>
-            <p className="text-[11px] text-[#A3A3A3] leading-snug">
-              Batch create due invoices across active subscriptions.
-            </p>
-            <button
-              onClick={() => setBillingModalOpen(true)}
-              className="w-full h-8 flex items-center justify-center gap-1.5 rounded-full bg-[#FFC83D] text-[#0E0E0E] text-xs font-bold hover:bg-[#FFB703] transition-colors cursor-pointer select-none"
-            >
-              <Play className="w-3 h-3 fill-current" /> Run Billing Batch
-            </button>
-          </div>
+          )}
 
           {/* Current User & Logout */}
           <div className="flex items-center justify-between px-2 pt-1 text-xs">

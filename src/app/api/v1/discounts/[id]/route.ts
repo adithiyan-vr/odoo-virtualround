@@ -5,7 +5,7 @@ import { updateDiscountSchema } from '@/lib/validators/subscription.validator';
 import { Role } from '@/lib/constants/enums';
 
 export const GET = route(
-  { roles: [Role.ADMIN] },
+  { roles: [Role.ADMIN, Role.STAFF] },
   async ({ params }) => {
     const discount = await DiscountService.getById(params.id);
     return ok(discount);

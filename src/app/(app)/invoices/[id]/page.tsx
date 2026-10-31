@@ -12,6 +12,7 @@ import { PaymentModal } from '@/features/payments/payment-modal';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { formatMoney, formatDate } from '@/lib/format';
 import { toast } from '@/components/ui/toast';
+import { useAuth } from '@/lib/auth-context';
 import {
   ArrowLeft,
   Calendar,
@@ -30,6 +31,7 @@ import {
 function InvoiceDetailContent() {
   const params = useParams();
   const invoiceId = Array.isArray(params.id) ? params.id[0] : (params.id as string);
+  const { isCustomer } = useAuth();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -165,7 +167,7 @@ function InvoiceDetailContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {isDraft && (
+          {!isCustomer && isDraft && (
             <Button
               variant="primary"
               size="sm"
@@ -177,7 +179,7 @@ function InvoiceDetailContent() {
             </Button>
           )}
 
-          {canPay && (
+          {!isCustomer && canPay && (
             <Button
               variant="primary"
               size="sm"
@@ -188,15 +190,17 @@ function InvoiceDetailContent() {
             </Button>
           )}
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleSendEmail}
-            isLoading={actionLoading}
-            className="gap-1.5"
-          >
-            <Send className="w-3.5 h-3.5" /> Send to Customer
-          </Button>
+          {!isCustomer && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleSendEmail}
+              isLoading={actionLoading}
+              className="gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" /> Send to Customer
+            </Button>
+          )}
 
           <Link href={`/print/invoice/${invoice.id}`} target="_blank">
             <Button variant="secondary" size="sm" className="gap-1.5">
@@ -204,7 +208,7 @@ function InvoiceDetailContent() {
             </Button>
           </Link>
 
-          {canCancel && (
+          {!isCustomer && canCancel && (
             <Button
               variant="destructive"
               size="sm"

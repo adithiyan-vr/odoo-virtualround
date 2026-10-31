@@ -22,6 +22,8 @@ import { computeLine, computeInvoiceTotals } from '@/server/pricing/pricing.engi
 import { Decimal } from 'decimal.js';
 import { SessionPayload } from '@/lib/session';
 import { BillingInterval } from '@/lib/constants/enums';
+import { isUniqueViolation } from '@/lib/errors';
+export { isUniqueViolation };
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -29,15 +31,6 @@ const BILLING_CHUNK_SIZE = parseInt(process.env.BILLING_CHUNK_SIZE ?? '20', 10);
 const BILLING_MAX_CATCHUP_CYCLES = parseInt(process.env.BILLING_MAX_CATCHUP_CYCLES ?? '24', 10);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code: string }).code === 'P2002'
-  );
-}
 
 function chunked<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -223,9 +216,7 @@ async function createInvoiceForCycle(
 ): Promise<void> {
   // 1. Build input lines for discount engine
   const inputLines: DiscountInputLine[] = sub.lines.map((l) => {
-    const unitPrice = toDecimal(l.unitPrice).add(
-      l.variant ? toDecimal(l.variant.priceSurcharge) : new Decimal(0)
-    );
+    const unitPrice = toDecimal(l.unitPrice);
     const gross = round2(unitPrice.mul(l.quantity));
     return {
       id: l.id,
@@ -338,9 +329,7 @@ async function createInvoiceForCycle(
   const pricingLines = sub.lines.map((l) => {
     const discountAmount = discountByLineId.get(l.id) ?? new Decimal(0);
     const taxRate = l.tax ? toDecimal(l.tax.ratePercent) : new Decimal(0);
-    const unitPrice = toDecimal(l.unitPrice).add(
-      l.variant ? toDecimal(l.variant.priceSurcharge) : new Decimal(0)
-    );
+    const unitPrice = toDecimal(l.unitPrice);
     return computeLine({
       quantity: l.quantity,
       unitPrice,
@@ -359,7 +348,7 @@ async function createInvoiceForCycle(
   dueDate.setDate(dueDate.getDate() + sub.paymentTerm.days);
 
   // 6. Allocate invoice number
-  const invoiceNumber = await nextInvoiceNumber();
+  const invoiceNumber = await nextInvoiceNumber(tx);
 
   // 7. Determine initial status
   const status =
@@ -405,9 +394,7 @@ async function createInvoiceForCycle(
             productId: l.productId,
             description: l.description,
             quantity: l.quantity,
-            unitPrice: toDecimal(l.unitPrice).add(
-              l.variant ? toDecimal(l.variant.priceSurcharge) : new Decimal(0)
-            ),
+            unitPrice: toDecimal(l.unitPrice),
             amount: p.amount,
             discountAmount: p.discountAmount,
             taxableAmount: p.taxable,
@@ -481,7 +468,7 @@ async function billOneSubscription(
     });
 
     return created;
-  });
+  }, { timeout: 30000, maxWait: 10000 });
 }
 
 // ─── Main billing run ─────────────────────────────────────────────────────────
@@ -521,13 +508,15 @@ export async function runBilling(
 
   // Collect due subscriptions
   const due = await prisma.subscription.findMany({
-    where: {
-      status: 'ACTIVE',
-      nextBillingDate: { lte: opts.asOfDate },
-      ...(opts.subscriptionIds?.length
-        ? { id: { in: opts.subscriptionIds } }
-        : {}),
-    },
+    where: opts.subscriptionIds?.length
+      ? {
+          status: 'ACTIVE',
+          id: { in: opts.subscriptionIds },
+        }
+      : {
+          status: 'ACTIVE',
+          nextBillingDate: { lte: opts.asOfDate },
+        },
     select: { id: true },
     orderBy: { nextBillingDate: 'asc' },
   });

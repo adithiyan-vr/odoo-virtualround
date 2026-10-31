@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, defaultExclude } from 'vitest/config';
 import path from 'path';
 
 export default defineConfig({
@@ -7,6 +7,8 @@ export default defineConfig({
     globals: true,
     testTimeout: 30000,
     hookTimeout: 30000,
+    include: process.env.VITEST_INCLUDE ? [process.env.VITEST_INCLUDE] : ['tests/**/*.test.ts'],
+    exclude: process.env.VITEST_INCLUDE ? [] : [...defaultExclude, 'tests/e2e-*.test.ts'],
   },
   resolve: {
     alias: {

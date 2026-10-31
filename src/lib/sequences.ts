@@ -9,11 +9,16 @@
  * (i.e., the row is created on first call).
  */
 
+import { Prisma } from '@prisma/client';
 import prisma from './db';
 
-async function nextVal(key: string, prefix: string, pad: number): Promise<string> {
-  const result = await prisma.$transaction(async (tx) => {
-    // Upsert + atomic increment in one statement
+async function nextVal(
+  key: string,
+  prefix: string,
+  pad: number,
+  tx?: Prisma.TransactionClient
+): Promise<string> {
+  if (tx) {
     await tx.$executeRaw`
       INSERT INTO number_sequences (key, next_value)
       VALUES (${key}, 1)
@@ -27,16 +32,36 @@ async function nextVal(key: string, prefix: string, pad: number): Promise<string
       RETURNING next_value - 1 AS next_value
     `;
 
-    return rows[0].next_value;
-  });
+    return `${prefix}${String(rows[0].next_value).padStart(pad, '0')}`;
+  }
+
+  const result = await prisma.$transaction(
+    async (innerTx) => {
+      await innerTx.$executeRaw`
+        INSERT INTO number_sequences (key, next_value)
+        VALUES (${key}, 1)
+        ON CONFLICT (key) DO NOTHING
+      `;
+
+      const rows = await innerTx.$queryRaw<{ next_value: number }[]>`
+        UPDATE number_sequences
+        SET next_value = next_value + 1
+        WHERE key = ${key}
+        RETURNING next_value - 1 AS next_value
+      `;
+
+      return rows[0].next_value;
+    },
+    { timeout: 30000, maxWait: 10000 }
+  );
 
   return `${prefix}${String(result).padStart(pad, '0')}`;
 }
 
-export function nextSubNumber(): Promise<string> {
-  return nextVal('sub_number', 'SUB-', 5);
+export function nextSubNumber(tx?: Prisma.TransactionClient): Promise<string> {
+  return nextVal('sub_number', 'SUB-', 5, tx);
 }
 
-export function nextInvoiceNumber(): Promise<string> {
-  return nextVal('invoice_number', 'INV-', 5);
+export function nextInvoiceNumber(tx?: Prisma.TransactionClient): Promise<string> {
+  return nextVal('invoice_number', 'INV-', 5, tx);
 }

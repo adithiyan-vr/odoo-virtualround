@@ -1,7 +1,7 @@
 import { route } from '@/server/route-wrapper';
 import { SubscriptionService } from '@/server/subscriptions/subscription.service';
 import { parsePagination } from '@/lib/pagination';
-import { ok, created } from '@/lib/api-envelope';
+import { paginated, created } from '@/lib/api-envelope';
 import {
   createSubscriptionSchema,
   subscriptionQuerySchema,
@@ -23,7 +23,7 @@ export const GET = route(
       },
       session
     );
-    return ok(result);
+    return paginated(result.subscriptions, result.meta);
   }
 );
 

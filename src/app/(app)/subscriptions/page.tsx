@@ -7,9 +7,11 @@ import { DataTable, type Column } from '@/components/shared/data-table';
 import { StatusPill } from '@/components/shared/status-pill';
 import { Button } from '@/components/ui/button';
 import { formatMoney, formatDate } from '@/lib/format';
+import { useAuth } from '@/lib/auth-context';
 import { Repeat, Plus, Calendar, ArrowRight, Eye } from 'lucide-react';
 
 export default function SubscriptionsPage() {
+  const { isCustomer } = useAuth();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -126,11 +128,13 @@ export default function SubscriptionsPage() {
           </p>
         </div>
 
-        <Link href="/subscriptions/new">
-          <Button variant="primary" className="gap-2">
-            <Plus className="w-4 h-4" /> New Subscription
-          </Button>
-        </Link>
+        {!isCustomer && (
+          <Link href="/subscriptions/new">
+            <Button variant="primary" className="gap-2">
+              <Plus className="w-4 h-4" /> New Subscription
+            </Button>
+          </Link>
+        )}
       </div>
 
       <DataTable

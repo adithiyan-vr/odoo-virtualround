@@ -484,6 +484,8 @@ export interface Invoice {
   totalAmount: number | string;
   paidAmount: number | string;
   balanceDue: number | string;
+  amountPaid?: number | string;
+  amountDue?: number | string;
   isOverdue: boolean;
   allowedActions?: string[];
   payments?: Payment[];

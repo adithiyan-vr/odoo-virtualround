@@ -78,10 +78,7 @@ const FULL_INCLUDE = {
 function formatSub(sub: Awaited<ReturnType<typeof prisma.subscription.findUniqueOrThrow>>, actorRole: Role, today: Date) {
   const plan = (sub as any).plan;
   const lines = ((sub as any).lines ?? []).map((l: any) => {
-    const unitPrice = effectiveUnitPrice(
-      toDecimal(l.unitPrice),
-      l.variant ? toDecimal(l.variant.priceSurcharge) : null
-    );
+    const unitPrice = toDecimal(l.unitPrice);
     const subtotal = round2(unitPrice.mul(l.quantity));
     return {
       id: l.id,
@@ -289,106 +286,109 @@ export class SubscriptionService {
     const startDate = toCalendarDate(data.startDate);
     const expiryDate = toCalendarDate(data.expiryDate);
 
-    const sub = await prisma.$transaction(async (tx) => {
-      const subNumber = await nextSubNumber();
+    // Build subscription lines prior to entering transaction
+    const lineData = await Promise.all(
+      resolvedLines.map(async (l, i) => {
+        const product = await prisma.product.findUnique({ where: { id: l.productId }, include: { defaultTax: true } });
+        if (!product) throw AppError.notFound(`Product ${l.productId} not found`);
 
-      // Build subscription lines
-      const lineData = await Promise.all(
-        resolvedLines.map(async (l, i) => {
-          const product = await tx.product.findUnique({ where: { id: l.productId }, include: { defaultTax: true } });
-          if (!product) throw AppError.notFound(`Product ${l.productId} not found`);
+        const variant = l.variantId
+          ? await prisma.productVariant.findUnique({ where: { id: l.variantId } })
+          : null;
 
-          const variant = l.variantId
-            ? await tx.productVariant.findUnique({ where: { id: l.variantId } })
-            : null;
+        const unitPrice = effectiveUnitPrice(
+          toDecimal(product.salesPrice),
+          variant ? toDecimal(variant.priceSurcharge) : null
+        );
+        const qty = l.quantity ?? 1;
+        const subtotal = round2(unitPrice.mul(qty));
+        const taxId = l.taxId ?? product.defaultTaxId ?? null;
 
-          const unitPrice = effectiveUnitPrice(
-            toDecimal(product.salesPrice),
-            variant ? toDecimal(variant.priceSurcharge) : null
-          );
-          const qty = l.quantity ?? 1;
-          const subtotal = round2(unitPrice.mul(qty));
-          const taxId = l.taxId ?? product.defaultTaxId ?? null;
+        return {
+          productId: l.productId,
+          variantId: l.variantId ?? null,
+          description: variant
+            ? `${product.name} (${variant.attributeName}: ${variant.attributeValue})`
+            : product.name,
+          isPlanFee: false,
+          quantity: qty,
+          unitPrice: unitPrice,
+          taxId,
+          subtotal,
+          sortOrder: i,
+        };
+      })
+    );
 
-          return {
-            productId: l.productId,
-            variantId: l.variantId ?? null,
-            description: variant
-              ? `${product.name} (${variant.attributeName}: ${variant.attributeValue})`
-              : product.name,
-            isPlanFee: false,
-            quantity: qty,
-            unitPrice: unitPrice,
-            taxId,
-            subtotal,
-            sortOrder: i,
-          };
-        })
-      );
-
-      // Add plan fee line if plan.price > 0
-      if (toDecimal(plan.price).gt(0)) {
-        lineData.unshift({
-          productId: null as any,
-          variantId: null,
-          description: `Plan Fee: ${plan.name}`,
-          isPlanFee: true,
-          quantity: 1,
-          unitPrice: toDecimal(plan.price),
-          taxId: null,
-          subtotal: round2(toDecimal(plan.price)),
-          sortOrder: -1,
-        });
-      }
-
-      const recurringSubtotal = lineData.reduce((s, l) => s.add(l.subtotal), new Decimal(0));
-
-      const created = await tx.subscription.create({
-        data: {
-          subNumber,
-          customerId: data.customerId,
-          planId: data.planId,
-          templateId: data.templateId ?? null,
-          discountId: data.discountId ?? null,
-          paymentTermId: data.paymentTermId,
-          status: 'DRAFT',
-          startDate,
-          expiryDate,
-          notes: data.notes ?? null,
-          recurringSubtotal,
-          createdById: session.userId,
-          lines: {
-            create: lineData.map((l) => ({
-              productId: l.productId,
-              variantId: l.variantId,
-              description: l.description,
-              isPlanFee: l.isPlanFee,
-              quantity: l.quantity,
-              unitPrice: l.unitPrice,
-              taxId: l.taxId,
-              subtotal: l.subtotal,
-              sortOrder: l.sortOrder,
-            })),
-          },
-        },
-        include: FULL_INCLUDE,
+    // Add plan fee line if plan.price > 0
+    if (toDecimal(plan.price).gt(0)) {
+      lineData.unshift({
+        productId: null as any,
+        variantId: null,
+        description: `Plan Fee: ${plan.name}`,
+        isPlanFee: true,
+        quantity: 1,
+        unitPrice: toDecimal(plan.price),
+        taxId: null,
+        subtotal: round2(toDecimal(plan.price)),
+        sortOrder: -1,
       });
+    }
 
-      await recordAuditLog(
-        {
-          actorId: session.userId,
-          entity: 'subscription',
-          entityId: created.id,
-          action: 'create_subscription',
-          meta: { subNumber: created.subNumber, customerId: data.customerId },
-        },
-        tx
-      );
+    const recurringSubtotal = lineData.reduce((s, l) => s.add(l.subtotal), new Decimal(0));
 
-      return created;
-    });
+    const subId = await prisma.$transaction(
+      async (tx) => {
+        const subNumber = await nextSubNumber(tx);
 
-    return formatSub(sub as any, session.role, today);
+        const created = await tx.subscription.create({
+          data: {
+            subNumber,
+            customerId: data.customerId,
+            planId: data.planId,
+            templateId: data.templateId ?? null,
+            discountId: data.discountId ?? null,
+            paymentTermId: data.paymentTermId,
+            status: 'DRAFT',
+            startDate,
+            expiryDate,
+            notes: data.notes ?? null,
+            recurringSubtotal,
+            createdById: session.userId,
+            lines: {
+              create: lineData.map((l) => ({
+                productId: l.productId,
+                variantId: l.variantId,
+                description: l.description,
+                isPlanFee: l.isPlanFee,
+                quantity: l.quantity,
+                unitPrice: l.unitPrice,
+                taxId: l.taxId,
+                subtotal: l.subtotal,
+                sortOrder: l.sortOrder,
+              })),
+            },
+          },
+          select: { id: true, subNumber: true },
+        });
+
+        await recordAuditLog(
+          {
+            actorId: session.userId,
+            entity: 'subscription',
+            entityId: created.id,
+            action: 'create_subscription',
+            meta: { subNumber: created.subNumber, customerId: data.customerId },
+          },
+          tx
+        );
+
+        return created.id;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
+
+    return SubscriptionService.getById(subId, session);
   }
 
   // ─── Update editable fields ────────────────────────────────────────────
@@ -514,28 +514,29 @@ export class SubscriptionService {
       updateData.nextBillingDate = null;
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const res = await tx.subscription.update({
-        where: { id },
-        data: updateData,
-        include: FULL_INCLUDE,
-      });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.subscription.update({
+          where: { id },
+          data: updateData,
+          select: { id: true },
+        });
 
-      await recordAuditLog(
-        {
-          actorId: session.userId,
-          entity: 'subscription',
-          entityId: id,
-          action: `transition_${sub.status}_to_${nextStatus}`,
-          meta: { from: sub.status, to: nextStatus, closeReason },
-        },
-        tx
-      );
+        await recordAuditLog(
+          {
+            actorId: session.userId,
+            entity: 'subscription',
+            entityId: id,
+            action: `transition_${sub.status}_to_${nextStatus}`,
+            meta: { from: sub.status, to: nextStatus, closeReason },
+          },
+          tx
+        );
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
-      return res;
-    });
-
-    return formatSub(updated as any, session.role, today);
+    return SubscriptionService.getById(id, session);
   }
 
   // ─── Renew ─────────────────────────────────────────────────────────────
@@ -558,28 +559,29 @@ export class SubscriptionService {
 
     const newExpiry = addInterval(sub.expiryDate, plan.billingInterval, 1);
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const res = await tx.subscription.update({
-        where: { id },
-        data: { expiryDate: newExpiry },
-        include: FULL_INCLUDE,
-      });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.subscription.update({
+          where: { id },
+          data: { expiryDate: newExpiry },
+          select: { id: true },
+        });
 
-      await recordAuditLog(
-        {
-          actorId: session.userId,
-          entity: 'subscription',
-          entityId: id,
-          action: 'renew_subscription',
-          meta: { oldExpiry: sub.expiryDate, newExpiry },
-        },
-        tx
-      );
+        await recordAuditLog(
+          {
+            actorId: session.userId,
+            entity: 'subscription',
+            entityId: id,
+            action: 'renew_subscription',
+            meta: { oldExpiry: sub.expiryDate, newExpiry },
+          },
+          tx
+        );
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
-      return res;
-    });
-
-    return formatSub(updated as any, session.role, today);
+    return SubscriptionService.getById(id, session);
   }
 }
 
