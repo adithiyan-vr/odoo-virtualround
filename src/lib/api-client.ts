@@ -494,6 +494,7 @@ export interface Payment {
   id: string;
   invoiceId: string;
   invoiceNumber?: string;
+  customer?: { name: string; email?: string };
   amount: number | string;
   method: 'BANK' | 'CARD' | 'CASH' | 'UPI' | 'CHEQUE';
   paymentDate: string;

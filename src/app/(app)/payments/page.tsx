@@ -6,7 +6,9 @@ import { paymentApi, invoiceApi, type Payment } from '@/lib/api-client';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { StatusPill } from '@/components/shared/status-pill';
 import { formatMoney, formatDate } from '@/lib/format';
-import { CreditCard, Landmark, QrCode, Banknote, FileCheck } from 'lucide-react';
+import { CreditCard, Landmark, QrCode, Banknote, FileCheck, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { downloadCsv } from '@/lib/export';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -110,15 +112,41 @@ export default function PaymentsPage() {
     },
   ];
 
+  const handleExportCsv = () => {
+    const headers = ['Invoice #', 'Customer', 'Method', 'Payment Date', 'Reference', 'Amount (INR)', 'Status'];
+    const rows = payments.map((p) => [
+      p.invoiceNumber || '',
+      p.customer?.name || '',
+      p.method,
+      formatDate(p.paymentDate),
+      p.reference || '',
+      p.amount,
+      p.status || 'RECORDED',
+    ]);
+    downloadCsv(`brightloop-payments-${new Date().toISOString().slice(0, 10)}`, headers, rows);
+  };
+
   return (
     <div className="space-y-6 text-left">
-      <div>
-        <h1 className="text-2xl font-bold font-display text-[#0E0E0E]">
-          Payments & Collections Ledger
-        </h1>
-        <p className="text-xs text-[#6B6B6B] mt-0.5">
-          Audit trail of payments recorded against customer receivables.
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-display text-[#0E0E0E]">
+            Payments & Collections Ledger
+          </h1>
+          <p className="text-xs text-[#6B6B6B] mt-0.5">
+            Audit trail of payments recorded against customer receivables.
+          </p>
+        </div>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleExportCsv}
+          disabled={payments.length === 0}
+          className="gap-2"
+        >
+          <Download className="w-4 h-4" /> Export CSV
+        </Button>
       </div>
 
       <DataTable

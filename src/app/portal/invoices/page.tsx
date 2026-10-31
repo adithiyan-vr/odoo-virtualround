@@ -7,7 +7,8 @@ import { DataTable, type Column } from '@/components/shared/data-table';
 import { StatusPill } from '@/components/shared/status-pill';
 import { Button } from '@/components/ui/button';
 import { formatMoney, formatDate } from '@/lib/format';
-import { FileText, ArrowRight, CreditCard, Printer } from 'lucide-react';
+import { FileText, ArrowRight, CreditCard, Printer, Download } from 'lucide-react';
+import { downloadCsv } from '@/lib/export';
 
 export default function CustomerInvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -128,6 +129,20 @@ export default function CustomerInvoicesPage() {
     },
   ];
 
+  const handleExportCsv = () => {
+    const headers = ['Invoice #', 'Invoice Date', 'Due Date', 'Status', 'Total (INR)', 'Paid (INR)', 'Balance Due (INR)'];
+    const rows = invoices.map((inv) => [
+      inv.invoiceNumber,
+      formatDate(inv.invoiceDate),
+      formatDate(inv.dueDate),
+      inv.status,
+      inv.totalAmount,
+      inv.paidAmount,
+      inv.amountDue,
+    ]);
+    downloadCsv(`my-invoices-${new Date().toISOString().slice(0, 10)}`, headers, rows);
+  };
+
   return (
     <div className="space-y-6 text-left">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -141,7 +156,18 @@ export default function CustomerInvoicesPage() {
         </div>
 
         {/* Filter Pills */}
-        <div className="inline-flex rounded-xl bg-white border border-[#E7E7E3] p-1 text-xs shadow-xs">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={invoices.length === 0}
+            className="gap-1.5 text-xs h-8"
+          >
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </Button>
+
+          <div className="inline-flex rounded-xl bg-white border border-[#E7E7E3] p-1 text-xs shadow-xs">
           {(['ALL', 'CONFIRMED', 'PAID'] as const).map((key) => (
             <button
               key={key}
@@ -157,6 +183,7 @@ export default function CustomerInvoicesPage() {
           ))}
         </div>
       </div>
+    </div>
 
       <DataTable
         columns={columns}

@@ -8,7 +8,8 @@ import { StatusPill } from '@/components/shared/status-pill';
 import { Button } from '@/components/ui/button';
 import { BillingModal } from '@/components/shared/billing-modal';
 import { formatMoney, formatDate } from '@/lib/format';
-import { FileText, Play, Printer, Eye, AlertCircle } from 'lucide-react';
+import { FileText, Play, Printer, Eye, AlertCircle, Download } from 'lucide-react';
+import { downloadCsv } from '@/lib/export';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -146,6 +147,32 @@ export default function InvoicesPage() {
       ),
     },
   ];
+
+  const handleExportCsv = () => {
+    const headers = [
+      'Invoice #',
+      'Customer',
+      'Invoice Date',
+      'Due Date',
+      'Status',
+      'Is Overdue',
+      'Total (INR)',
+      'Paid (INR)',
+      'Balance Due (INR)',
+    ];
+    const rows = invoices.map((inv) => [
+      inv.invoiceNumber,
+      inv.customer?.name || '',
+      formatDate(inv.billingCycleDate),
+      formatDate(inv.dueDate),
+      inv.status,
+      inv.isOverdue ? 'YES' : 'NO',
+      inv.totalAmount,
+      inv.paidAmount,
+      inv.balanceDue,
+    ]);
+    downloadCsv(`brightloop-invoices-${new Date().toISOString().slice(0, 10)}`, headers, rows);
+  };
 
   return (
     <div className="space-y-6 text-left">
