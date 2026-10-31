@@ -93,11 +93,11 @@
 
 | Date | Scenario | Expected | Actual | Result |
 |------|----------|----------|--------|--------|
-| _—_ | Signup with existing email | 409 | | |
-| _—_ | Password `Abcdefg1!` (9 chars, rules met) | accepted | | |
-| _—_ | Password `Abcdef1!` (8 chars) | rejected | | |
+| 2026-10-31 | Signup with existing email | 409 | 409 CONFLICT | ✅ PASS |
+| 2026-10-31 | Password `Abcdefg1!` (9 chars, rules met) | accepted | accepted | ✅ PASS |
+| 2026-10-31 | Password `Abcdef1!` (8 chars) | rejected | 400 VALIDATION_ERROR | ✅ PASS |
 | _—_ | Customer opens another customer's invoice | 404 | | |
-| _—_ | Staff creates another staff | 403 | | |
+| 2026-10-31 | Staff/Customer creates staff account | 403 | 403 FORBIDDEN | ✅ PASS |
 | _—_ | Draft → Active jump | 409 | | |
 | _—_ | Run billing twice for same date | 2nd run: created 0, skipped N | | |
 | _—_ | Discount `max_uses` reached | Not applied on next invoice | | |
@@ -163,6 +163,14 @@
 - Module 3 (UI): Subscriptions & Quotations Lifecycle (/subscriptions, /subscriptions/new, /subscriptions/[id]) featuring template auto-fill, plan fee handling, state machine action buttons (send_quotation, confirm, activate, pause, resume, renew, close), tabbed detail views (Overview, Lines, Invoices, Activity), and plan policy guard checks.
 - Module 4 & 5 (UI): Customer Invoices (/invoices, /invoices/[id]) with status ribbon (Draft › Confirmed › Paid), overdue pills, action buttons (Confirm, Cancel, Send email, Print), Payment history card with integrated PaymentModal, and clean printable A4 format (/print/invoice/[id]); Promotional Discounts (/discounts, /discounts/new, /discounts/[id]) with usage limit meters and auto-apply toggles; and Executive Billing Modal with idempotency assurances.
 - Added client-side formatting tests (tests/format.test.ts). Verified 21/21 passing tests and full production build (npm run build) compiling all 48 routes with 0 errors.
+
+### 2026-10-31 · M1 · TEST · Full Live Backend Audit Against Supabase (44/44 Tests Passing)
+- Verified active connection to centralized Supabase database (`aws-1-eu-central-1.pooler.supabase.com:6543/5432`).
+- Ran end-to-end audit (`tests/e2e-api-audit.test.ts`) exercising live HTTP endpoints against Supabase:
+  - Auth: signup validation, duplicate email conflict (409), password regex, login, `auth/me` with JWT cookies, single-use forgot-password tokens, and email logging to `/dev/mailbox`.
+  - RBAC: admin, staff, and customer role restrictions; verified non-admin access to staff creation is rejected with 403 FORBIDDEN.
+  - Catalog: Products CRUD, Variants CRUD with +560 Odoo brand surcharge verification (`effectivePrice = 1760.00`), Plans with 4 lifecycle policy flags, Quotation Templates with line items, Tax rules (GST 18% default), and Payment Terms (Net 30 default).
+- Verified full test suite: 7 test files, 44 tests passed with 0 errors.
 
 <!-- Append new entries below this line -->
 
