@@ -20,3 +20,4 @@ export const GET = route(
     return ok(summary);
   }
 );
+

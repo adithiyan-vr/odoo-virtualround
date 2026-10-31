@@ -22,3 +22,4 @@ export const GET = route(
     return ok(result);
   }
 );
+

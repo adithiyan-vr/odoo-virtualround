@@ -12,3 +12,4 @@ export const dashboardQuerySchema = z.object({
 });
 
 export type DashboardQueryParams = z.infer<typeof dashboardQuerySchema>;
+

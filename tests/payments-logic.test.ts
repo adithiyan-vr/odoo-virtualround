@@ -67,3 +67,4 @@ describe('Module 6: Payments & Overpayment Protection Logic', () => {
     expect(allowedStatuses.includes(InvoiceStatus.CANCELLED as any)).toBe(false);
   });
 });
+
