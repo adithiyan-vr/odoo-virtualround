@@ -117,6 +117,7 @@ function formatSub(sub: Awaited<ReturnType<typeof prisma.subscription.findUnique
     id: sub.id,
     subNumber: sub.subNumber,
     status: sub.status,
+    customerId: sub.customerId,
     customer: (sub as any).customer,
     plan: {
       id: plan.id,

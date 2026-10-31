@@ -155,18 +155,16 @@ export default function DashboardPage() {
             ))}
           </div>
 
-        {!isCustomer && (
-          <Button
-            variant="accent"
-            onClick={() => setBillingModalOpen(true)}
-            className="gap-2 shadow-sm"
-          >
-            <Play className="w-4 h-4 fill-current" /> Run Billing Batch
-          </Button>
+          {!isCustomer && (
+            <Button
+              variant="accent"
+              onClick={() => setBillingModalOpen(true)}
+              className="gap-2 shadow-sm"
+            >
+              <Play className="w-4 h-4 fill-current" /> Run Billing Batch
+            </Button>
+          )}
         </div>
-            <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
-          </Button>
-        )}
       </div>
 
       {/* 5 KPI Cards (First Card Dark per DESIGN.md §6.5) */}

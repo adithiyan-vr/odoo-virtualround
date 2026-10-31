@@ -284,6 +284,25 @@
 - Verification: 14 test suites (89 unit tests passed), 100% Next.js production build success (`npm run build`, 68 static and dynamic routes compiled).
 
 
+### 2026-10-31 · All · AUDIT & REHEARSAL · All Remaining Tasks & Final 8-Step Demo Rehearsal Complete
+- **Database Index Verification (`scripts/verify-indexes.ts`)**:
+  - Executed `EXPLAIN ANALYZE` across key PostgreSQL tables (`subscriptions`, `invoices`, `payments`).
+  - Verified index scans on `invoices_customer_id_idx` (0.148 ms), `payments_invoice_id_idx` (0.083 ms), and fast SQL aggregations with `FILTER` (0.235 ms).
+- **CSV Invoice Export**:
+  - Implemented RFC 4180 UTF-8 BOM CSV exporter in `src/lib/export.ts` and wired "Export CSV" button in `src/app/(app)/invoices/page.tsx`.
+- **Documentation & Vercel Readiness**:
+  - Expanded `README.md` to cover complete module APIs (Subscriptions, Discounts, Invoices, Billing, Payments, Dashboard), architecture diagram, Vercel deployment variables, and the 5-minute demo script.
+- **Automated 8-Step End-to-End Demo Rehearsal (`tests/e2e-demo-rehearsal.test.ts`)**:
+  - Step 1: Customer signup with strict password regex and duplicate email conflict (409).
+  - Step 2: Admin creates product with Brand=Odoo variant (+560), monthly plan, and discount.
+  - Step 3: Staff creates quote from template, transitions `DRAFT` → `QUOTATION` → `CONFIRMED` → `ACTIVE`.
+  - Step 4: Billing Day batch run creates invoice, and re-run for same cycle proves idempotency (`created: 0, skipped: N`).
+  - Step 5: Verified tax (18%) and discount calculations on invoice, plus printable layout endpoint (`/print`).
+  - Step 6: Recorded partial payment (status remains `CONFIRMED`), then full settlement (flips to `PAID`).
+  - Step 7: Finance dashboard returns KPI cards and analytics within strict performance thresholds.
+  - Step 8: Customer portal row-scoping verified (customers only query self-owned records).
+  - Result: 8/8 tests passed (100%).
+
 ---
 
 ## 8. Deployment Log

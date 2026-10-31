@@ -11,7 +11,6 @@ import { formatMoney, formatDate } from '@/lib/format';
 import { FileText, Play, Printer, Eye, AlertCircle, Download } from 'lucide-react';
 import { downloadCsv } from '@/lib/export';
 import { useAuth } from '@/lib/auth-context';
-import { FileText, Play, Printer, Eye, AlertCircle } from 'lucide-react';
 
 export default function InvoicesPage() {
   const { isCustomer } = useAuth();
@@ -189,15 +188,25 @@ export default function InvoicesPage() {
           </p>
         </div>
 
-        {!isCustomer && (
+        <div className="flex items-center gap-2">
           <Button
-            variant="accent"
-            onClick={() => setBillingModalOpen(true)}
+            variant="secondary"
+            onClick={handleExportCsv}
             className="gap-2"
           >
-            <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
+            <Download className="w-4 h-4" /> Export CSV
           </Button>
-        )}
+
+          {!isCustomer && (
+            <Button
+              variant="accent"
+              onClick={() => setBillingModalOpen(true)}
+              className="gap-2"
+            >
+              <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
+            </Button>
+          )}
+        </div>
       </div>
 
       <DataTable

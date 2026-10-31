@@ -110,6 +110,87 @@ npm test
 - `GET, POST /api/v1/payment-terms` — Payment terms (Immediate, Net 15, Net 30, Net 60)
 - `GET, PATCH, DELETE /api/v1/payment-terms/:id` — Payment term edit and archive
 
+### Subscriptions & State Machine (M2)
+- `GET, POST /api/v1/subscriptions` — List subscriptions (filtered, paginated) / Create from template or blank
+- `GET, PATCH /api/v1/subscriptions/:id` — Detail view with `allowedTransitions` / Edit lines in DRAFT
+- `POST /api/v1/subscriptions/:id/transition` — State machine transition (`DRAFT` → `QUOTATION` → `CONFIRMED` → `ACTIVE` → `CLOSED`, plus `PAUSED`)
+- `POST /api/v1/subscriptions/:id/renew` — Contract renewal extending expiry by billing interval
+
+### Discounts & Pricing (M2)
+- `GET, POST /api/v1/discounts` — List discounts / Create percent or fixed discounts with thresholds and caps
+- `GET, PATCH, DELETE /api/v1/discounts/:id` — Discount details, field updates, archive
+
+### Billing Day & Invoicing (M2)
+- `POST /api/v1/billing/run` — Idempotent batch billing run for active subscriptions up to `asOfDate`
+- `POST /api/v1/billing/auto-close` — Sweep and auto-close expired contracts based on plan policy
+- `GET  /api/v1/invoices` — List generated invoices (status, overdue badge, balance due)
+- `GET  /api/v1/invoices/:id` — Invoice detail view with line totals, tax breakdown, and payments
+- `POST /api/v1/invoices/:id/confirm` — Move invoice from `DRAFT` to `CONFIRMED`
+- `POST /api/v1/invoices/:id/cancel` — Cancel confirmed invoice (guarded against paid invoices)
+- `POST /api/v1/invoices/:id/send` — Mark invoice sent and dispatch mock customer email
+- `GET  /api/v1/invoices/:id/print` — Formatted printable invoice structure
+
+### Payments & Dashboard (M4)
+- `POST /api/v1/payments` — Record payment on confirmed invoice; auto-flips to `PAID` when balance is 0
+- `GET  /api/v1/dashboard/summary` — Fast SQL analytics (`COUNT/SUM ... FILTER`): active subs, revenue, outstanding, overdue, and charts
+
 ### System & Diagnostics
 - `GET /api/v1/health` — Database and system health check
 - `GET /api/v1/dev/mailbox` — In-browser mailbox showing mocked emails
+
+---
+
+## 🏛️ Architecture Summary
+
+```
+src/
+├── app/
+│   ├── (auth)/                  # Auth UI: Login, Signup, Forgot, Reset
+│   ├── (app)/                   # ERP UI: Dashboard, Subscriptions, Invoices, Admin
+│   ├── api/v1/                  # Next.js App Router REST API endpoints
+│   └── print/invoice/[id]       # Print-to-PDF invoice template
+├── components/
+│   ├── shared/                  # AppShell, DataTable, StatusRibbon, BillingModal, PricePreview
+│   └── ui/                      # shadcn/ui primitives (Button, Card, Input, Modal, Toast)
+├── features/                    # Rich feature forms (Products, Plans, Discounts, Payments)
+├── lib/
+│   ├── state-machine.ts         # Pure domain state machine (zero I/O, strict transitions)
+│   ├── db.ts                    # Prisma Client singleton
+│   ├── dates.ts                 # Anchor date math (prevents month-end drift)
+│   ├── money.ts                 # Decimal(12,2) half-up rounders
+│   └── sequences.ts             # Atomic row-locked SUB-xxxxx and INV-xxxxx generators
+└── server/
+    ├── billing/                 # BillingService (batch runs, idempotency, locks) & InvoiceService
+    ├── discounts/               # DiscountEngine (winner selection, thresholds, exhaustion)
+    ├── pricing/                 # PricingEngine (line totals, tax aggregation)
+    └── subscriptions/           # SubscriptionService (lifecycle orchestration)
+```
+
+---
+
+## 🚀 Deployment to Vercel
+
+Brightloop is fully configured for continuous deployment on **Vercel**:
+1. Connect your GitHub repository to Vercel.
+2. Select **Next.js** framework preset.
+3. Configure Environment Variables in Project Settings:
+   - `DATABASE_URL`: Your pooled PostgreSQL connection string (Supabase/Neon, Port 6543/5432).
+   - `DIRECT_URL`: Direct database connection string (Port 5432) for migrations.
+   - `JWT_SECRET`: Random 32+ character hex or base64 secret string.
+   - `APP_URL`: Your deployed production URL (e.g., `https://brightloop.vercel.app`).
+   - `MAIL_MOCK`: `true`
+4. Build command: `npm run build`
+5. Output directory: `.next`
+
+---
+
+## 🎬 5-Minute Demo Script
+
+1. **Sign Up (`/signup`)**: Register a customer with email and password (observe live policy checklist: 9+ chars, upper, lower, special).
+2. **Admin Catalog (`/products`, `/plans`)**: Create a product with `Brand = Odoo` variant (+₹560 surcharge). Notice the live **Price Preview** widget!
+3. **Quotation & Subscription (`/subscriptions`)**: Create a subscription quote from a template. Move: `DRAFT` → `QUOTATION` → `CONFIRMED` → `ACTIVE`. Observe the **Status Ribbon** progress.
+4. **Billing Day Batch (`/invoices`)**: Click **Run Daily Billing Batch**, pick next month's date, and run. Notice invoice created! **Click it again** for the exact same date: the engine skips it gracefully (`created: 0, skipped: N`) demonstrating total idempotency.
+5. **Invoice Inspection & Print (`/invoices/:id`)**: Confirm the invoice, view discount + GST 18% calculation, and click **Print / PDF**.
+6. **Payment Recording**: Click **Record Payment**, record a partial payment (status remains `CONFIRMED`), then pay remainder (status flips to `PAID`).
+7. **Finance Dashboard (`/dashboard`)**: View real-time KPI cards, monthly revenue chart, and filter overdue invoices.
+8. **Customer Portal**: Sign in as `customer@brightloop.io` — sidebar restricts administrative tabs and displays only customer-owned subscriptions and invoices.

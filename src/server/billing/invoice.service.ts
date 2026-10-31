@@ -34,6 +34,7 @@ function formatInvoice(inv: any, session: SessionPayload) {
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     status: inv.status,
+    customerId: inv.customerId,
     subscription: inv.subscription
       ? { id: inv.subscription.id, subNumber: inv.subscription.subNumber }
       : null,

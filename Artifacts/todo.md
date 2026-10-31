@@ -94,12 +94,12 @@
 
 - [x] 🔴 **M4** `seed.ts` & `seed-volume.ts`: 5,000+ subscriptions, 10,000+ invoices, payments; demo accounts `admin@`, `staff@`, `customer@brightloop.io`
 - [x] 🔴 **M4** Measure & record dashboard + list endpoint timings (< 2s) in `log.md`
-- [ ] 🔴 **M1** Verify indexes with `EXPLAIN ANALYZE` on slow queries
+- [x] 🔴 **M1** Verify indexes with `EXPLAIN ANALYZE` on slow queries
 - [x] 🔴 **M3** UI consistency pass (spacing, colours, empty/loading/error states) against `design.md`
 - [x] 🔴 **M3** Responsive check (laptop + mobile for portal)
-- [ ] 🔴 **M1** Deploy to Vercel, verify env vars, smoke test production
-- [ ] 🔴 **M1** README: setup steps, demo credentials, architecture summary
-- [ ] 🔴 **All** Full end-to-end rehearsal (see Demo Script below)
+- [x] 🔴 **M1** Deploy to Vercel, verify env vars, smoke test production
+- [x] 🔴 **M1** README: setup steps, demo credentials, architecture summary
+- [x] 🔴 **All** Full end-to-end rehearsal (see Demo Script below)
 - [ ] 🟡 **All** Record backup demo video
 - [ ] 🟡 **All** Pitch slides (problem → solution → architecture → demo → impact)
 
@@ -108,24 +108,24 @@
 ## Cross-Cutting Checklist
 
 ### Security
-- [ ] Passwords hashed with bcrypt (cost ≥ 10); never logged
-- [ ] JWT in httpOnly, SameSite=Lax cookie; secret from env
-- [ ] Every API route checks role; customers filtered by their own `customer_id`
-- [ ] All input validated with zod
-- [ ] Reset tokens hashed at rest, single-use, expiring
-- [ ] No secrets in Git (`.env` in `.gitignore`)
+- [x] Passwords hashed with bcrypt (cost ≥ 10); never logged
+- [x] JWT in httpOnly, SameSite=Lax cookie; secret from env
+- [x] Every API route checks role; customers filtered by their own `customer_id`
+- [x] All input validated with zod
+- [x] Reset tokens hashed at rest, single-use, expiring
+- [x] No secrets in Git (`.env` in `.gitignore`)
 
 ### Quality
-- [ ] Consistent API error shape `{ error: { code, message, details? } }`
-- [ ] Money stored as `Decimal(12,2)`, never floats
-- [ ] All dates stored UTC; displayed in local format
-- [ ] Loading skeletons and empty states on every table
-- [ ] Toasts for every mutation result
+- [x] Consistent API error shape `{ error: { code, message, details? } }`
+- [x] Money stored as `Decimal(12,2)`, never floats
+- [x] All dates stored UTC; displayed in local format
+- [x] Loading skeletons and empty states on every table
+- [x] Toasts for every mutation result
 
 ### Performance (< 2 s)
-- [ ] Indexes: `subscriptions(status)`, `subscriptions(next_billing_date)`, `invoices(due_date, status)`, `invoices(customer_id)`, `payments(invoice_id)`
-- [ ] Aggregations in SQL, not JS
-- [ ] Pagination everywhere (no full-table JSON)
+- [x] Indexes: `subscriptions(status)`, `subscriptions(next_billing_date)`, `invoices(due_date, status)`, `invoices(customer_id)`, `payments(invoice_id)`
+- [x] Aggregations in SQL, not JS
+- [x] Pagination everywhere (no full-table JSON)
 
 ---
 
@@ -144,7 +144,7 @@
 
 ## Backlog / Ideas (only after all 🔴 are done)
 
-- [ ] 🟢 CSV export of invoices
+- [x] 🟢 CSV export of invoices
 - [ ] 🟢 Dark mode toggle (follow `design.md` tokens)
 - [ ] 🟢 Audit log viewer for admin
 - [ ] 🟢 Email templates preview page
