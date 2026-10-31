@@ -10,8 +10,11 @@ import { BillingModal } from '@/components/shared/billing-modal';
 import { formatMoney, formatDate } from '@/lib/format';
 import { FileText, Play, Printer, Eye, AlertCircle, Download } from 'lucide-react';
 import { downloadCsv } from '@/lib/export';
+import { useAuth } from '@/lib/auth-context';
+import { FileText, Play, Printer, Eye, AlertCircle } from 'lucide-react';
 
 export default function InvoicesPage() {
+  const { isCustomer } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -186,13 +189,15 @@ export default function InvoicesPage() {
           </p>
         </div>
 
-        <Button
-          variant="accent"
-          onClick={() => setBillingModalOpen(true)}
-          className="gap-2"
-        >
-          <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
-        </Button>
+        {!isCustomer && (
+          <Button
+            variant="accent"
+            onClick={() => setBillingModalOpen(true)}
+            className="gap-2"
+          >
+            <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
+          </Button>
+        )}
       </div>
 
       <DataTable

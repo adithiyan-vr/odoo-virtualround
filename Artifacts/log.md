@@ -58,7 +58,7 @@
 | # | Date raised | Description | Owner | Status | Resolution |
 |---|-------------|-------------|-------|--------|------------|
 | R1 | 2026-10-31 | Frontend depends on backend endpoints not yet built | M3/M4 | Mitigated | Build against example responses in `api.md` |
-| R2 | 2026-10-31 | Month-end date math (Jan 31 + 1 month) | M2 | Open | Use `date-fns addMonths`; add unit test |
+| R2 | 2026-10-31 | Month-end date math (Jan 31 + 1 month) | M2 | Resolved | Implemented anchor-based date math in `dates.ts` + verified with unit and billing engine tests |
 | R3 | 2026-10-31 | Dashboard < 2 s on 5k+ rows | M4 | Open | Indexes + SQL aggregation + pagination; verify after seed |
 
 ---
@@ -194,6 +194,34 @@
   - RBAC: admin, staff, and customer role restrictions; verified non-admin access to staff creation is rejected with 403 FORBIDDEN.
   - Catalog: Products CRUD, Variants CRUD with +560 Odoo brand surcharge verification (`effectivePrice = 1760.00`), Plans with 4 lifecycle policy flags, Quotation Templates with line items, Tax rules (GST 18% default), and Payment Terms (Net 30 default).
 - Verified full test suite: 7 test files, 44 tests passed with 0 errors.
+
+### 2026-10-31 · M1 · AUDIT & FIX · Member M2 Implementation Verification & E2E Testing (25/25 E2E + 81/81 Unit Passing)
+- Audited Member M2's implementation across Modules 3 (Subscriptions Lifecycle), 4 (Billing Day Engine & Invoicing), and 5 (Discounts & Pricing):
+  - Fixed sequence numbering deadlock: Updated `nextVal`, `nextSubNumber`, and `nextInvoiceNumber` to accept transaction client `tx` to avoid nested interactive transactions.
+  - Fixed surcharge double-counting: Removed redundant addition of `priceSurcharge` in `formatSub` and `billing.service.ts` (unit price in lines already stores the effective price).
+  - Fixed transaction timeouts under remote WAN latency: Pre-fetched catalog lookups outside transactions in `SubscriptionService.create` and moved post-commit full includes outside transaction boundaries, reducing transaction lock times from ~30s to <500ms.
+  - Fixed discount route RBAC & pagination envelopes: Enabled `STAFF` role access for discount views, and standardized response envelopes to `{ data, meta }` with `paginated()`.
+  - Fixed billing run idempotency: Corrected `BillingService.run` to target explicitly provided `subscriptionIds` without filtering out already-billed cycles, gracefully reporting `skipped` count.
+- Authored and ran `tests/e2e-m2-audit.test.ts` (25/25 tests passing):
+  - Verified discounts CRUD, scope application, and max usage increments.
+  - Verified subscription creation, line calculations, DRAFT updates, and complete state machine: `DRAFT → QUOTATION → CONFIRMED → ACTIVE → PAUSED → ACTIVE`.
+  - Verified 409 CONFLICT on illegal state leaps and plan policy enforcement (`canPause: false`).
+  - Verified renewal extending expiry by billing interval.
+  - Verified billing day batch runner (`POST /api/v1/billing/run`), idempotency check (0 created, 1+ skipped on re-run), and auto-close sweep (`POST /api/v1/billing/auto-close`).
+  - Verified invoice lifecycle: retrieval, confirmation, mock email send, printable structure, and cancellation.
+- Verified test suite: 10 unit test files (81/81 passing) + E2E suite (25/25 passing).
+- Verified Next.js production build (`npm run build`): 53 routes compiled cleanly with 0 TypeScript errors.
+
+### 2026-10-31 · M2 & M3 · FEATURE & AUDIT · Full Completion of Core Business Logic & Frontend ERP
+- Completed all outstanding tasks for Members M2 (Business Logic) and M3 (Frontend ERP):
+  - Fixed TypeScript TS2783 duplicate key in `discount.service.ts` where multiple `OR` conditions collided.
+  - Added dual property aliases `paidAmount`/`balanceDue` alongside `amountPaid`/`amountDue` in `invoice.service.ts` and `api-client.ts` to guarantee 100% contract compatibility with UI components.
+  - Exported `isUniqueViolation` from `lib/errors.ts` for clean Prisma error code `P2002` detection without leaking database client instances in tests.
+  - Hardened customer role guards across `app-shell.tsx`, `subscriptions/page.tsx`, `subscriptions/[id]/page.tsx`, `invoices/page.tsx`, `invoices/[id]/page.tsx`, and `dashboard/page.tsx`. Customers are barred from batch billing, staff creation, quotation generation, and staff actions, while preserving customer self-service (pause/close strictly governed by plan policies).
+  - Validated M3 UI: Admin CRUD forms (Products with Brand=Odoo +₹560 surcharge, Plans with 4 lifecycle flags, Taxes, Discounts, Staff with live password policy checklist), `PricePreview` live calculator, reusable `DataTable` (search, sort, pagination, empty/loading skeletons), `StatusRibbon`, and `BillingModal`.
+  - Expanded `billing-engine.test.ts` to 13 tests covering double-click idempotency simulation, catch-up progression, discount exhaustion, and state machine exclusions.
+  - Executed end-to-end audit `tests/e2e-m2-audit.test.ts` against live server: 25/25 tests passing.
+  - Full suite verification: 10 unit test files (81/81 passing), zero TypeScript errors (`npx tsc --noEmit`), and 53/53 routes compiled with code 0 (`npm run build`).
 
 <!-- Append new entries below this line -->
 

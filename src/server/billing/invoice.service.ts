@@ -57,6 +57,8 @@ function formatInvoice(inv: any, session: SessionPayload) {
     totalAmount: toDecimal(inv.totalAmount).toNumber(),
     amountPaid: toDecimal(inv.amountPaid).toNumber(),
     amountDue: toDecimal(inv.amountDue).toNumber(),
+    paidAmount: toDecimal(inv.amountPaid).toNumber(),
+    balanceDue: toDecimal(inv.amountDue).toNumber(),
     isOverdue,
     confirmedAt: inv.confirmedAt,
     sentAt: inv.sentAt,
@@ -185,20 +187,23 @@ export class InvoiceService {
       throw AppError.businessRule(`Invoice is not in DRAFT status (current: ${inv.status})`);
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const res = await tx.invoice.update({
-        where: { id },
-        data: { status: 'CONFIRMED', confirmedAt: new Date() },
-        include: FULL_INCLUDE,
-      });
+    const updated = await prisma.$transaction(
+      async (tx) => {
+        const res = await tx.invoice.update({
+          where: { id },
+          data: { status: 'CONFIRMED', confirmedAt: new Date() },
+          include: FULL_INCLUDE,
+        });
 
-      await recordAuditLog(
-        { actorId: session.userId, entity: 'invoice', entityId: id, action: 'confirm_invoice' },
-        tx
-      );
+        await recordAuditLog(
+          { actorId: session.userId, entity: 'invoice', entityId: id, action: 'confirm_invoice' },
+          tx
+        );
 
-      return res;
-    });
+        return res;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
     return formatInvoice(updated, session);
   }
@@ -220,20 +225,23 @@ export class InvoiceService {
       throw AppError.businessRule('Cannot cancel a confirmed invoice that has payments recorded');
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const res = await tx.invoice.update({
-        where: { id },
-        data: { status: 'CANCELLED', cancelledAt: new Date() },
-        include: FULL_INCLUDE,
-      });
+    const updated = await prisma.$transaction(
+      async (tx) => {
+        const res = await tx.invoice.update({
+          where: { id },
+          data: { status: 'CANCELLED', cancelledAt: new Date() },
+          include: FULL_INCLUDE,
+        });
 
-      await recordAuditLog(
-        { actorId: session.userId, entity: 'invoice', entityId: id, action: 'cancel_invoice' },
-        tx
-      );
+        await recordAuditLog(
+          { actorId: session.userId, entity: 'invoice', entityId: id, action: 'cancel_invoice' },
+          tx
+        );
 
-      return res;
-    });
+        return res;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
     return formatInvoice(updated, session);
   }
@@ -247,20 +255,23 @@ export class InvoiceService {
       throw AppError.businessRule('Only CONFIRMED invoices can be sent');
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const res = await tx.invoice.update({
-        where: { id },
-        data: { sentAt: new Date() },
-        include: FULL_INCLUDE,
-      });
+    const updated = await prisma.$transaction(
+      async (tx) => {
+        const res = await tx.invoice.update({
+          where: { id },
+          data: { sentAt: new Date() },
+          include: FULL_INCLUDE,
+        });
 
-      await recordAuditLog(
-        { actorId: session.userId, entity: 'invoice', entityId: id, action: 'send_invoice' },
-        tx
-      );
+        await recordAuditLog(
+          { actorId: session.userId, entity: 'invoice', entityId: id, action: 'send_invoice' },
+          tx
+        );
 
-      return res;
-    });
+        return res;
+      },
+      { timeout: 30000, maxWait: 10000 }
+    );
 
     // Attempt email mock — non-blocking
     try {

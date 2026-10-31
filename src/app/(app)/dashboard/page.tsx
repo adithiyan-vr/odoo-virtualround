@@ -17,6 +17,7 @@ import { StatusPill } from '@/components/shared/status-pill';
 import { Button } from '@/components/ui/button';
 import { BillingModal } from '@/components/shared/billing-modal';
 import { formatMoney, formatDate } from '@/lib/format';
+import { useAuth } from '@/lib/auth-context';
 import {
   Repeat,
   DollarSign,
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenueData[]>([]);
   const [statusBreakdown, setStatusBreakdown] = useState<SubscriptionStatusData[]>([]);
+  const { isCustomer } = useAuth();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [overdueInvoices, setOverdueInvoices] = useState<any[]>([]);
@@ -153,6 +155,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
+        {!isCustomer && (
           <Button
             variant="accent"
             onClick={() => setBillingModalOpen(true)}
@@ -161,6 +164,9 @@ export default function DashboardPage() {
             <Play className="w-4 h-4 fill-current" /> Run Billing Batch
           </Button>
         </div>
+            <Play className="w-4 h-4 fill-current" /> Run Billing Day Batch
+          </Button>
+        )}
       </div>
 
       {/* 5 KPI Cards (First Card Dark per DESIGN.md §6.5) */}

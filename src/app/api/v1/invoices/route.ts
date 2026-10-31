@@ -1,7 +1,7 @@
 import { route } from '@/server/route-wrapper';
 import { InvoiceService } from '@/server/billing/invoice.service';
 import { parsePagination } from '@/lib/pagination';
-import { ok } from '@/lib/api-envelope';
+import { paginated } from '@/lib/api-envelope';
 import { invoiceQuerySchema } from '@/lib/validators/subscription.validator';
 import { Role } from '@/lib/constants/enums';
 
@@ -21,7 +21,7 @@ export const GET = route(
       },
       session
     );
-    return ok(result);
+    return paginated(result.invoices, result.meta);
   }
 );
 

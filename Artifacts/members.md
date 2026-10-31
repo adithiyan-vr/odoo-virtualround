@@ -46,27 +46,27 @@
 ### M2 — Core Business Logic Engineer
 **Workflow slice:** *"Turning a quote into a subscription", "Billing day", "A customer asks for a better price"*
 
-- [ ] Subscription service: create from quotation template, number generator (`SUB-00001`), line totals with variant surcharge
-- [ ] State machine guard: `DRAFT → QUOTATION → CONFIRMED → ACTIVE → CLOSED` (+ `PAUSED` branch). Reject illegal jumps with `409`
-- [ ] Plan policy enforcement: `can_pause`, `can_close_early`, `can_renew`, `auto_close` (on `valid_to`/expiry)
-- [ ] Tax engine: apply admin-defined tax rules per line
-- [ ] Discount evaluator: FIXED/PERCENT, min purchase/qty, date window, `max_uses`, scope PRODUCT vs SUBSCRIPTION, auto-apply on next invoice
-- [ ] **Billing Day engine** (hero feature): transactional batch over `ACTIVE` subs with `next_billing_date <= asOfDate`; skips duplicates gracefully; advances `next_billing_date` with `date-fns`; increments `current_uses`
-- [ ] Invoice transitions: confirm / cancel / send (email mock)
-- [ ] Unit tests for: state transitions, discount edge cases, double-click billing, month-end date math
+- [x] Subscription service: create from quotation template, number generator (`SUB-00001`), line totals with variant surcharge
+- [x] State machine guard: `DRAFT → QUOTATION → CONFIRMED → ACTIVE → CLOSED` (+ `PAUSED` branch). Reject illegal jumps with `409`
+- [x] Plan policy enforcement: `can_pause`, `can_close_early`, `can_renew`, `auto_close` (on `valid_to`/expiry)
+- [x] Tax engine: apply admin-defined tax rules per line
+- [x] Discount evaluator: FIXED/PERCENT, min purchase/qty, date window, `max_uses`, scope PRODUCT vs SUBSCRIPTION, auto-apply on next invoice
+- [x] **Billing Day engine** (hero feature): transactional batch over `ACTIVE` subs with `next_billing_date <= asOfDate`; skips duplicates gracefully; advances `next_billing_date` with `date-fns`; increments `current_uses`
+- [x] Invoice transitions: confirm / cancel / send (email mock)
+- [x] Unit tests for: state transitions, discount edge cases, double-click billing, month-end date math
 
 **Deliverables others depend on:** service functions (Hour 10), billing endpoint (Hour 16–22).
 
 ### M3 — Frontend ERP Builder
 **Workflow slice:** *Everything Admin/Staff sees and clicks*
 
-- [ ] Design system implementation per `design.md`: tokens, layout shell (sidebar + topbar), shadcn component wrappers, status badges, data table, empty/loading/error states
-- [ ] `StatusRibbon` component (Draft → Quotation → Confirmed → Active → Closed) used on both subscription and invoice detail pages
-- [ ] Auth screens: login, signup (live password-rule checklist), forgot/reset
-- [ ] Admin screens: Products + Variants, Plans (lifecycle toggles), Quotation Templates, Discounts, Tax Rules, Staff management
-- [ ] Staff screens: Subscription list/detail/create-from-template, Invoice list/detail with Confirm/Cancel/Send/Print buttons
-- [ ] `BillingModal` — "Run Daily Billing Batch" + date picker + toast result
-- [ ] Route guards by role; consistent toasts, forms (react-hook-form + zod)
+- [x] Design system implementation per `design.md`: tokens, layout shell (sidebar + topbar), shadcn component wrappers, status badges, data table, empty/loading/error states
+- [x] `StatusRibbon` component (Draft → Quotation → Confirmed → Active → Closed) used on both subscription and invoice detail pages
+- [x] Auth screens: login, signup (live password-rule checklist), forgot/reset
+- [x] Admin screens: Products + Variants, Plans (lifecycle toggles), Quotation Templates, Discounts, Tax Rules, Staff management
+- [x] Staff screens: Subscription list/detail/create-from-template, Invoice list/detail with Confirm/Cancel/Send/Print buttons
+- [x] `BillingModal` — "Run Daily Billing Batch" + date picker + toast result
+- [x] Route guards by role; consistent toasts, forms (react-hook-form + zod)
 
 **Deliverables others depend on:** layout shell + shared components (Hour 4) so M4 reuses them.
 
