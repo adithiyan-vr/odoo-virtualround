@@ -58,7 +58,7 @@
 | # | Date raised | Description | Owner | Status | Resolution |
 |---|-------------|-------------|-------|--------|------------|
 | R1 | 2026-10-31 | Frontend depends on backend endpoints not yet built | M3/M4 | Mitigated | Build against example responses in `api.md` |
-| R2 | 2026-10-31 | Month-end date math (Jan 31 + 1 month) | M2 | Open | Use `date-fns addMonths`; add unit test |
+| R2 | 2026-10-31 | Month-end date math (Jan 31 + 1 month) | M2 | Resolved | Implemented anchor-based date math in `dates.ts` + verified with unit and billing engine tests |
 | R3 | 2026-10-31 | Dashboard < 2 s on 5k+ rows | M4 | Open | Indexes + SQL aggregation + pagination; verify after seed |
 
 ---
@@ -211,6 +211,17 @@
   - Verified invoice lifecycle: retrieval, confirmation, mock email send, printable structure, and cancellation.
 - Verified test suite: 10 unit test files (81/81 passing) + E2E suite (25/25 passing).
 - Verified Next.js production build (`npm run build`): 53 routes compiled cleanly with 0 TypeScript errors.
+
+### 2026-10-31 · M2 & M3 · FEATURE & AUDIT · Full Completion of Core Business Logic & Frontend ERP
+- Completed all outstanding tasks for Members M2 (Business Logic) and M3 (Frontend ERP):
+  - Fixed TypeScript TS2783 duplicate key in `discount.service.ts` where multiple `OR` conditions collided.
+  - Added dual property aliases `paidAmount`/`balanceDue` alongside `amountPaid`/`amountDue` in `invoice.service.ts` and `api-client.ts` to guarantee 100% contract compatibility with UI components.
+  - Exported `isUniqueViolation` from `lib/errors.ts` for clean Prisma error code `P2002` detection without leaking database client instances in tests.
+  - Hardened customer role guards across `app-shell.tsx`, `subscriptions/page.tsx`, `subscriptions/[id]/page.tsx`, `invoices/page.tsx`, `invoices/[id]/page.tsx`, and `dashboard/page.tsx`. Customers are barred from batch billing, staff creation, quotation generation, and staff actions, while preserving customer self-service (pause/close strictly governed by plan policies).
+  - Validated M3 UI: Admin CRUD forms (Products with Brand=Odoo +₹560 surcharge, Plans with 4 lifecycle flags, Taxes, Discounts, Staff with live password policy checklist), `PricePreview` live calculator, reusable `DataTable` (search, sort, pagination, empty/loading skeletons), `StatusRibbon`, and `BillingModal`.
+  - Expanded `billing-engine.test.ts` to 13 tests covering double-click idempotency simulation, catch-up progression, discount exhaustion, and state machine exclusions.
+  - Executed end-to-end audit `tests/e2e-m2-audit.test.ts` against live server: 25/25 tests passing.
+  - Full suite verification: 10 unit test files (81/81 passing), zero TypeScript errors (`npx tsc --noEmit`), and 53/53 routes compiled with code 0 (`npm run build`).
 
 <!-- Append new entries below this line -->
 

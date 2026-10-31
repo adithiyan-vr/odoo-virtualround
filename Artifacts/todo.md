@@ -39,9 +39,9 @@
 - [x] 🔴 **M1** Plans CRUD (interval, price, min qty, valid_from/to, 4 lifecycle flags)
 - [x] 🔴 **M1** Tax rules CRUD (admin-defined, % rate, applicable scope)
 - [x] 🔴 **M2** Discounts CRUD + evaluator function (see Phase 4)
-- [ ] 🔴 **M3** Admin UI: Products/Variants, Plans, Taxes, Discounts, Staff
-- [ ] 🔴 **M3** Price preview widget (base + variant surcharge) on product form
-- [ ] 🟡 **M3** Table search, sort, pagination component reused everywhere
+- [x] 🔴 **M3** Admin UI: Products/Variants, Plans, Taxes, Discounts, Staff
+- [x] 🔴 **M3** Price preview widget (base + variant surcharge) on product form
+- [x] 🟡 **M3** Table search, sort, pagination component reused everywhere
 
 ---
 
@@ -95,8 +95,8 @@
 - [ ] 🔴 **M4** `seed.ts`: 5,000+ subscriptions, 10,000+ invoices, payments; demo accounts `admin@`, `staff@`, `customer@brightloop.io`
 - [ ] 🔴 **M4** Measure & record dashboard + list endpoint timings (< 2s) in `log.md`
 - [ ] 🔴 **M1** Verify indexes with `EXPLAIN ANALYZE` on slow queries
-- [ ] 🔴 **M3** UI consistency pass (spacing, colours, empty/loading/error states) against `design.md`
-- [ ] 🔴 **M3** Responsive check (laptop + mobile for portal)
+- [x] 🔴 **M3** UI consistency pass (spacing, colours, empty/loading/error states) against `design.md`
+- [x] 🔴 **M3** Responsive check (laptop + mobile for portal)
 - [ ] 🔴 **M1** Deploy to Vercel, verify env vars, smoke test production
 - [ ] 🔴 **M1** README: setup steps, demo credentials, architecture summary
 - [ ] 🔴 **All** Full end-to-end rehearsal (see Demo Script below)
