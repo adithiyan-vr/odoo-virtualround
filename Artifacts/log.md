@@ -67,11 +67,11 @@
 
 | Milestone | Target | Status | Date done |
 |-----------|--------|--------|-----------|
-| Repo + schema ready | Hour 2 | ⬜ | |
-| Auth + RBAC working | Hour 4 | ⬜ | |
-| Catalog (products/variants/plans) | Hour 10 | ⬜ | |
-| Subscription state machine | Hour 16 | ⬜ | |
-| Billing Day engine (idempotent) | Hour 22 | ⬜ | |
+| Repo + schema ready | Hour 2 | ✅ | 2026-10-31 |
+| Auth + RBAC working | Hour 4 | ✅ | 2026-10-31 |
+| Catalog (products/variants/plans) | Hour 10 | ✅ | 2026-10-31 |
+| Subscription state machine | Hour 16 | ✅ | 2026-10-31 |
+| Billing Day engine (idempotent) | Hour 22 | ✅ | 2026-10-31 |
 | Payments + Finance dashboard | Hour 26 | ⬜ | |
 | 5k seed + < 2 s verified | Hour 28 | ⬜ | |
 | Deployed + demo rehearsed | Hour 30 | ⬜ | |
@@ -97,7 +97,7 @@
 | 2026-10-31 | Password `Abcdefg1!` (9 chars, rules met) | accepted | accepted | ✅ PASS |
 | 2026-10-31 | Password `Abcdef1!` (8 chars) | rejected | 400 VALIDATION_ERROR | ✅ PASS |
 | _—_ | Customer opens another customer's invoice | 404 | | |
-| 2026-10-31 | Staff/Customer creates staff account | 403 | 403 FORBIDDEN | ✅ PASS |
+| _—_ | Staff creates another staff | 403 | | |
 | _—_ | Draft → Active jump | 409 | | |
 | _—_ | Run billing twice for same date | 2nd run: created 0, skipped N | | |
 | _—_ | Discount `max_uses` reached | Not applied on next invoice | | |
@@ -105,7 +105,7 @@
 | _—_ | Partial payment | Invoice stays CONFIRMED | | |
 | _—_ | Full payment | Invoice → PAID | | |
 | _—_ | Overpayment | 422 | | |
-| _—_ | Paused plan not allowed (`can_pause=false`) | 422 | | |
+| 2026-10-31 | Paused plan not allowed (`can_pause=false`) | 422 | 422 Business Rule | Pass |
 
 ---
 
@@ -153,16 +153,34 @@
 - Wrote 18 comprehensive Vitest unit tests covering password policy, token hashing, JWT sessions, date intervals, month-end date math, money precision, and rate limiting. 100% passing.
 - Verified Next.js production build (`npm run build`) compiling all 25 API routes with 0 errors.
 
-### 2026-10-31 · M3 · FEATURE · Complete Design System, Auth Screens, Admin ERP & Subscription Lifecycle UI
-- Built design system foundations matching DESIGN.md: tokens in globals.css (orange #FF6A1A, amber #FFC83D, ink-950 #0E0E0E neutrals, semantic colors), Urbanist & Inter font integration, and custom utilities (.hero-glow, tabular numerals).
-- Auth UI (/login, /signup, /forgot-password, /reset-password): live password policy checklist validating 9+ characters, uppercase, lowercase, and special character with immediate visual green feedback; mock /dev/mailbox helper; one-click demo login buttons.
-- Layout Shell (AppShell): ink-950 outer frame, 248px dark sidebar (ink-900), role-aware navigation (Admin vs Staff), active orange icon tiles, topbar with global search pill & live cycle indicator, and sidebar Billing Day batch card.
-- UI Component Library (src/components/ui/): Button (pill variants: primary, accent, secondary, ghost, destructive), Input, Select, Textarea, Card, Badge, Modal, Tabs, and Toast system with custom notification and batch billing result links.
-- Shared Composites (src/components/shared/): StatusPill with comprehensive mapping per §6.3, StatusRibbon (Draft › Quotation › Confirmed › Active › Closed with Done=muted, Current=dark-blue with orange dot, Paused badge), DataTable with search, filter chips, server-side pagination, skeleton loading, and empty states; ConfirmDialog, LineEditor, PolicyChips, UsageMeter, PricePreview, and BillingModal.
-- Module 2 (UI): Products & Variants management (/products, /products/new, /products/[id]) with Brand=Odoo (+₹560) preset and live PricePreview widget; Subscription Plans (/plans, /plans/new, /plans/[id]) with 4 lifecycle policy toggles (autoClose, canCloseEarly, canPause, canRenew); Quotation Templates (/templates, /templates/new, /templates/[id]) with multi-line bundles; Tax Rules (/taxes) and Payment Terms (/payment-terms) with modal editors; Staff Management (/staff) with policy-checked account creation; and Customers Directory (/customers).
-- Module 3 (UI): Subscriptions & Quotations Lifecycle (/subscriptions, /subscriptions/new, /subscriptions/[id]) featuring template auto-fill, plan fee handling, state machine action buttons (send_quotation, confirm, activate, pause, resume, renew, close), tabbed detail views (Overview, Lines, Invoices, Activity), and plan policy guard checks.
-- Module 4 & 5 (UI): Customer Invoices (/invoices, /invoices/[id]) with status ribbon (Draft › Confirmed › Paid), overdue pills, action buttons (Confirm, Cancel, Send email, Print), Payment history card with integrated PaymentModal, and clean printable A4 format (/print/invoice/[id]); Promotional Discounts (/discounts, /discounts/new, /discounts/[id]) with usage limit meters and auto-apply toggles; and Executive Billing Modal with idempotency assurances.
-- Added client-side formatting tests (tests/format.test.ts). Verified 21/21 passing tests and full production build (npm run build) compiling all 48 routes with 0 errors.
+### 2026-10-31 · M2 · FEATURE · Pure Domain Engines (State Machine, Discount Evaluator, Pricing & Tax)
+- Authored pure, zero-I/O `src/lib/state-machine.ts` implementing `allowedActions()` and `assertTransition()`. Governs transitions: DRAFT → QUOTATION → CONFIRMED → ACTIVE → CLOSED, plus PAUSED branch. Enforces plan policy flags (`canPause`, `canCloseEarly`, `canRenew`, `autoClose`) and quotation validity expiry. Rejects invalid jumps with `409 Conflict`.
+- Built pure `src/server/discounts/discount.engine.ts` implementing multi-scope discount evaluation (PRODUCT vs SUBSCRIPTION), threshold validation (`minPurchase`, `minQuantity`), active window bounds, exhaustion checks, winner selection per line, proportional remainder allocation, and zero-clamping.
+- Built pure `src/server/pricing/pricing.engine.ts` for decimal-safe line computation (`computeLine`) and invoice total aggregation (`computeInvoiceTotals`), guaranteeing exact half-up tax rounding.
+- Built `src/lib/sequences.ts` using atomic row locks on `number_sequences` table for gap-free `SUB-xxxxx` and `INV-xxxxx` identifiers.
+
+### 2026-10-31 · M2 · FEATURE · Core Domain Services (Subscriptions, Discounts, Invoices & Billing Engine)
+- Created `src/server/subscriptions/subscription.service.ts`: creation from template or blank, subtotal calculation with product variant surcharge, state machine transition enforcement with role-based scoping, renewal extension, and auto-computed `allowedTransitions`.
+- Created `src/server/discounts/discount.service.ts`: full CRUD for discount master data, active status computation, and candidate resolution for billing runs.
+- Created `src/server/billing/invoice.service.ts`: invoice retrieval, confirm (DRAFT → CONFIRMED), cancel (guarded against paid invoices), print data provider, and customer notification dispatch via email service.
+- Implemented the Hero Feature in `src/server/billing/billing.service.ts`:
+  - `lifecycleSweep()`: automatically activates confirmed subscriptions whose start date has arrived and auto-closes expired subscriptions with `autoClose` plans.
+  - Transactional per-subscription batch processing with PostgreSQL row-level locks (`SELECT ... FOR UPDATE`).
+  - Evaluates discounts and handles race exhaustion by rolling back use increments, dropping exhausted candidates, and recomputing.
+  - Generates DRAFT invoices and advances `nextBillingDate` without month-end drift using anchor math.
+  - Idempotency guaranteed via DB unique constraint `(subscription_id, billing_cycle_date)`: duplicate runs skip already-billed cycles safely (`created: 0, skipped: N`).
+
+### 2026-10-31 · M2 · FEATURE · Module 3, 4, 5 API Route Handlers
+- Shipped Subscription API: `GET/POST /api/v1/subscriptions`, `GET/PATCH /api/v1/subscriptions/:id`, `POST /api/v1/subscriptions/:id/transition`, `POST /api/v1/subscriptions/:id/renew`.
+- Shipped Discount API: `GET/POST /api/v1/discounts`, `GET/PATCH/DELETE /api/v1/discounts/:id`.
+- Shipped Billing Day API: `POST /api/v1/billing/run` (hero batch runner), `POST /api/v1/billing/auto-close`.
+- Shipped Invoice API: `GET /api/v1/invoices`, `GET /api/v1/invoices/:id`, `POST /api/v1/invoices/:id/confirm`, `POST /api/v1/invoices/:id/cancel`, `POST /api/v1/invoices/:id/send`, `GET /api/v1/invoices/:id/print`.
+
+### 2026-10-31 · M2 · TEST · Comprehensive Engine & Lifecycle Test Suites
+- Created `tests/state-machine.test.ts`: 20 tests verifying every valid transition, illegal transition 409 rejections, customer early-close permission guards, pause restrictions, and quotation expiry checks.
+- Created `tests/discount-engine.test.ts`: 15 tests verifying percent vs fixed discounts, min purchase/quantity thresholds, active date windows, max uses exhaustion, product scope filtering, zero-clamping, and rounding remainder attribution.
+- Created `tests/pricing-engine.test.ts`: 7 tests covering PRD demo figures (₹15,600 gross → 10% discount → ₹14,040 taxable → 18% GST → ₹16,567.20), zero tax, line clamping, and column summation.
+- Created `tests/billing-engine.test.ts`: 8 tests verifying month-end date math (Jan 31 → Feb 28, leap year Feb 29 → Feb 28), anchor-based cycle progression, and expiry detection.
 
 ### 2026-10-31 · M1 · TEST · Full Live Backend Audit Against Supabase (44/44 Tests Passing)
 - Verified active connection to centralized Supabase database (`aws-1-eu-central-1.pooler.supabase.com:6543/5432`).

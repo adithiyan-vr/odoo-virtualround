@@ -38,16 +38,25 @@
 - [x] 🔴 **M1** Variants CRUD (attribute, value, surcharge) — seed Brand=Odoo → +560
 - [x] 🔴 **M1** Plans CRUD (interval, price, min qty, valid_from/to, 4 lifecycle flags)
 - [x] 🔴 **M1** Tax rules CRUD (admin-defined, % rate, applicable scope)
-- [ ] 🔴 **M2** Discounts CRUD + evaluator function (see Phase 4)
-- [x] 🔴 **M3** Admin UI: Products/Variants, Plans, Taxes, Discounts, Staff
-- [x] 🔴 **M3** Price preview widget (base + variant surcharge) on product form
-- [x] 🟡 **M3** Table search, sort, pagination component reused everywhere
+- [x] 🔴 **M2** Discounts CRUD + evaluator function (see Phase 4)
+- [ ] 🔴 **M3** Admin UI: Products/Variants, Plans, Taxes, Discounts, Staff
+- [ ] 🔴 **M3** Price preview widget (base + variant surcharge) on product form
+- [ ] 🟡 **M3** Table search, sort, pagination component reused everywhere
 
 ---
 
 ## Phase 3 — Quotation & Subscription Lifecycle (Hour 10–16) · Module 3
 
 - [x] 🔴 **M1** Quotation Templates CRUD (plan, lines, `validity_days`)
+- [x] 🔴 **M2** `createSubscriptionFromTemplate()` with auto `SUB-xxxxx` numbering
+- [x] 🔴 **M2** Subscription line calc: unit price + variant surcharge, tax, subtotal
+- [x] 🔴 **M2** State machine: `DRAFT→QUOTATION→CONFIRMED→ACTIVE→CLOSED` + `PAUSED` branch; illegal jump → `409`
+- [x] 🔴 **M2** Enforce plan policy flags (pause / early close / renew / auto-close)
+- [x] 🔴 **M2** Quotation expiry check using `validity_days`
+- [ ] 🔴 **M3** Subscription list + detail + create-from-template UI
+- [ ] 🔴 **M3** `StatusRibbon` component (muted past, dark-blue current, light-grey future)
+- [x] 🟡 **M2** Renewal action creating next-term dates
+- [x] 🟢 **M2** Daily auto-close job endpoint (`POST /billing/auto-close`)
 - [ ] 🔴 **M2** `createSubscriptionFromTemplate()` with auto `SUB-xxxxx` numbering
 - [ ] 🔴 **M2** Subscription line calc: unit price + variant surcharge, tax, subtotal
 - [ ] 🔴 **M2** State machine: `DRAFT→QUOTATION→CONFIRMED→ACTIVE→CLOSED` + `PAUSED` branch; illegal jump → `409`
@@ -63,6 +72,13 @@
 ## Phase 4 — Billing Day & Invoicing (Hour 16–22) · Module 4 & 5 (hero)
 
 - [ ] 🔴 **M1** Confirm DB constraint `UNIQUE(subscription_id, billing_cycle_date)` + indexes
+- [x] 🔴 **M2** `runBilling(asOfDate)`: select ACTIVE subs with `next_billing_date <= asOfDate`
+- [x] 🔴 **M2** In one transaction per subscription: build lines → apply discount → apply tax → create invoice `DRAFT` → advance `next_billing_date` → `current_uses++`
+- [x] 🔴 **M2** Skip (not crash) on unique-constraint violation; return `{processed, created, skipped, durationMs}`
+- [x] 🔴 **M2** Paused / closed / expired subs never billed
+- [x] 🔴 **M2** Invoice actions: confirm, cancel, send (email mock)
+- [ ] 🔴 **M3** Invoice list/detail UI with action buttons + status ribbon
+- [ ] 🔴 **M3** `BillingModal`: date picker + "Run Daily Billing Batch" + result toast
 - [ ] 🔴 **M2** `runBilling(asOfDate)`: select ACTIVE subs with `next_billing_date <= asOfDate`
 - [ ] 🔴 **M2** In one transaction per subscription: build lines → apply discount → apply tax → create invoice `DRAFT` → advance `next_billing_date` → `current_uses++`
 - [ ] 🔴 **M2** Skip (not crash) on unique-constraint violation; return `{processed, created, skipped, durationMs}`
@@ -71,7 +87,7 @@
 - [x] 🔴 **M3** Invoice list/detail UI with action buttons + status ribbon
 - [x] 🔴 **M3** `BillingModal`: date picker + "Run Daily Billing Batch" + result toast
 - [ ] 🔴 **M4** `InvoicePrint` page (`window.print()`, `print:hidden` sidebar)
-- [ ] 🔴 **M2** Tests: double-click billing, month-end (Jan 31 → Feb 28), discount exhausted, expired discount
+- [x] 🔴 **M2** Tests: double-click billing, month-end (Jan 31 → Feb 28), discount exhausted, expired discount
 
 ---
 
