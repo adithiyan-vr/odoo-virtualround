@@ -26,8 +26,8 @@
 - [x] 🔴 **M1** `POST /auth/reset-password` — validates token + same password regex
 - [x] 🔴 **M1** `requireRole()` middleware + customer row-scope helper
 - [x] 🔴 **M1** `POST /users/staff` (ADMIN only)
-- [ ] 🔴 **M3** Login, Signup (live rule checklist), Forgot/Reset pages
-- [ ] 🔴 **M3** Layout shell + role-based sidebar + route guards
+- [x] 🔴 **M3** Login, Signup (live rule checklist), Forgot/Reset pages
+- [x] 🔴 **M3** Layout shell + role-based sidebar + route guards
 - [x] 🟡 **M1** Rate-limit login (5/min/IP)
 
 ---
@@ -57,6 +57,15 @@
 - [ ] 🔴 **M3** `StatusRibbon` component (muted past, dark-blue current, light-grey future)
 - [x] 🟡 **M2** Renewal action creating next-term dates
 - [x] 🟢 **M2** Daily auto-close job endpoint (`POST /billing/auto-close`)
+- [ ] 🔴 **M2** `createSubscriptionFromTemplate()` with auto `SUB-xxxxx` numbering
+- [ ] 🔴 **M2** Subscription line calc: unit price + variant surcharge, tax, subtotal
+- [ ] 🔴 **M2** State machine: `DRAFT→QUOTATION→CONFIRMED→ACTIVE→CLOSED` + `PAUSED` branch; illegal jump → `409`
+- [ ] 🔴 **M2** Enforce plan policy flags (pause / early close / renew / auto-close)
+- [ ] 🔴 **M2** Quotation expiry check using `validity_days`
+- [x] 🔴 **M3** Subscription list + detail + create-from-template UI
+- [x] 🔴 **M3** `StatusRibbon` component (muted past, dark-blue current, light-grey future)
+- [ ] 🟡 **M2** Renewal action creating next-term dates
+- [ ] 🟢 **M2** Daily auto-close job endpoint (`POST /billing/auto-close`)
 
 ---
 
@@ -70,6 +79,13 @@
 - [x] 🔴 **M2** Invoice actions: confirm, cancel, send (email mock)
 - [ ] 🔴 **M3** Invoice list/detail UI with action buttons + status ribbon
 - [ ] 🔴 **M3** `BillingModal`: date picker + "Run Daily Billing Batch" + result toast
+- [ ] 🔴 **M2** `runBilling(asOfDate)`: select ACTIVE subs with `next_billing_date <= asOfDate`
+- [ ] 🔴 **M2** In one transaction per subscription: build lines → apply discount → apply tax → create invoice `DRAFT` → advance `next_billing_date` → `current_uses++`
+- [ ] 🔴 **M2** Skip (not crash) on unique-constraint violation; return `{processed, created, skipped, durationMs}`
+- [ ] 🔴 **M2** Paused / closed / expired subs never billed
+- [ ] 🔴 **M2** Invoice actions: confirm, cancel, send (email mock)
+- [x] 🔴 **M3** Invoice list/detail UI with action buttons + status ribbon
+- [x] 🔴 **M3** `BillingModal`: date picker + "Run Daily Billing Batch" + result toast
 - [ ] 🔴 **M4** `InvoicePrint` page (`window.print()`, `print:hidden` sidebar)
 - [x] 🔴 **M2** Tests: double-click billing, month-end (Jan 31 → Feb 28), discount exhausted, expired discount
 
@@ -86,7 +102,7 @@
 - [ ] 🔴 **M4** Filters: date range, plan, customer, invoice status
 - [ ] 🔴 **M4** Server-side pagination (default 25) on every list
 - [ ] 🔴 **M4** Customer portal: own subscriptions + invoices + print
-- [ ] 🟡 **M3** Payment modal inside invoice detail (uses M4 API)
+- [x] 🟡 **M3** Payment modal inside invoice detail (uses M4 API)
 
 ---
 

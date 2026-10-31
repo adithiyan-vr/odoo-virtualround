@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
+@theme {
+  --color-orange-50: #FFF4EC;
+  --color-orange-100: #FFE6D2;
+  --color-orange-300: #FFA96D;
+  --color-orange-400: #FF8A3D;
+  --color-orange-500: #FF6A1A;
+  --color-orange-600: #EA5A0C;
+  --color-orange-700: #C2410C;
+
+  --color-amber-100: #FFF3CC;
+  --color-amber-400: #FFC83D;
+
+  --color-ink-50: #F7F7F5;
+  --color-ink-100: #F1F1EE;
+  --color-ink-200: #E7E7E3;
+  --color-ink-400: #9A9A9A;
+  --color-ink-500: #6B6B6B;
+  --color-ink-600: #4A4A4A;
+  --color-ink-800: #232323;
+  --color-ink-900: #171717;
+  --color-ink-950: #0E0E0E;
+
+  --font-display: var(--font-urbanist), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* brand */
+  --orange-50: #FFF4EC;
+  --orange-100: #FFE6D2;
+  --orange-300: #FFA96D;
+  --orange-400: #FF8A3D;
+  --orange-500: #FF6A1A;
+  --orange-600: #EA5A0C;
+  --orange-700: #C2410C;
+  --amber-400: #FFC83D;
+  --amber-100: #FFF3CC;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* ink */
+  --ink-950: #0E0E0E;
+  --ink-900: #171717;
+  --ink-800: #232323;
+  --ink-600: #4A4A4A;
+  --ink-500: #6B6B6B;
+  --ink-400: #9A9A9A;
+  --ink-200: #E7E7E3;
+  --ink-100: #F1F1EE;
+  --ink-50: #F7F7F5;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* semantic */
+  --success-fg: #15803D;
+  --success-bg: #DCFCE7;
+  --info-fg: #1D4ED8;
+  --info-bg: #DBEAFE;
+  --warning-fg: #92400E;
+  --warning-bg: #FEF3C7;
+  --danger-fg: #B91C1C;
+  --danger-bg: #FEE2E2;
+
+  /* surfaces & base */
+  --background: #F7F7F5;
+  --foreground: #0E0E0E;
+  --card: #FFFFFF;
+  --card-foreground: #0E0E0E;
+  --popover: #FFFFFF;
+  --popover-foreground: #0E0E0E;
+  --primary: #0E0E0E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F1EE;
+  --secondary-foreground: #0E0E0E;
+  --muted: #F1F1EE;
+  --muted-foreground: #6B6B6B;
+  --accent: #FFF4EC;
+  --accent-foreground: #C2410C;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E7E7E3;
+  --input: #E7E7E3;
+  --ring: #FF6A1A;
+  --radius: 12px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-glow {
+  background:
+    radial-gradient(60% 55% at 50% 0%, rgba(255,106,26,.38) 0%, rgba(255,106,26,0) 70%),
+    repeating-conic-gradient(from 90deg at 50% -10%, rgba(255,160,90,.20) 0 6deg, transparent 6deg 14deg);
+  -webkit-mask-image: linear-gradient(#000 40%, transparent);
+          mask-image: linear-gradient(#000 40%, transparent);
 }
