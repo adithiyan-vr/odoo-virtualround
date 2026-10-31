@@ -8,36 +8,36 @@
 
 ## Phase 0 — Kickoff (Hour 0–2)
 
-- [ ] 🔴 **All** Read problem statement, `summary.md`, `tech-stack-guide.md`; agree on Stack (Next.js + Prisma + Postgres)
-- [ ] 🔴 **M1** Create GitHub repo, protect `main`, add teammates
-- [ ] 🔴 **M1** Scaffold Next.js (TS), Tailwind, shadcn/ui, ESLint, Prettier, Husky (optional)
-- [ ] 🔴 **M1** Create Neon/Supabase Postgres, share `DATABASE_URL` via private channel (never commit)
-- [ ] 🔴 **M1** Write `.env.example` (`DATABASE_URL`, `JWT_SECRET`, `APP_URL`, `SMTP_*` or `MAIL_MOCK=true`)
-- [ ] 🔴 **M1** Finalize `schema.prisma` and run first migration
-- [ ] 🟡 **All** Put `prd.md`, `architecture.md`, `design.md`, `database.md`, `api.md`, `members.md`, `todo.md`, `log.md` in `/docs`
+- [x] 🔴 **All** Read problem statement, `summary.md`, `tech-stack-guide.md`; agree on Stack (Next.js + Prisma + Postgres)
+- [x] 🔴 **M1** Create GitHub repo, protect `main`, add teammates
+- [x] 🔴 **M1** Scaffold Next.js (TS), Tailwind, shadcn/ui, ESLint, Prettier, Husky (optional)
+- [x] 🔴 **M1** Create Neon/Supabase Postgres, share `DATABASE_URL` via private channel (never commit)
+- [x] 🔴 **M1** Write `.env.example` (`DATABASE_URL`, `JWT_SECRET`, `APP_URL`, `SMTP_*` or `MAIL_MOCK=true`)
+- [x] 🔴 **M1** Finalize `schema.prisma` and run first migration
+- [x] 🟡 **All** Put `prd.md`, `architecture.md`, `design.md`, `database.md`, `api.md`, `members.md`, `todo.md`, `log.md` in `/docs`
 
 ---
 
 ## Phase 1 — Auth & RBAC (Hour 2–4) · Module 1
 
-- [ ] 🔴 **M1** `POST /auth/signup` — unique email, password regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$`
-- [ ] 🔴 **M1** `POST /auth/login` → JWT httpOnly cookie with `role`, `userId`
-- [ ] 🔴 **M1** `POST /auth/forgot-password` → single-use token (hashed in DB, 30 min expiry) → email mock/log link
-- [ ] 🔴 **M1** `POST /auth/reset-password` — validates token + same password regex
-- [ ] 🔴 **M1** `requireRole()` middleware + customer row-scope helper
-- [ ] 🔴 **M1** `POST /users/staff` (ADMIN only)
+- [x] 🔴 **M1** `POST /auth/signup` — unique email, password regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{9,}$`
+- [x] 🔴 **M1** `POST /auth/login` → JWT httpOnly cookie with `role`, `userId`
+- [x] 🔴 **M1** `POST /auth/forgot-password` → single-use token (hashed in DB, 30 min expiry) → email mock/log link
+- [x] 🔴 **M1** `POST /auth/reset-password` — validates token + same password regex
+- [x] 🔴 **M1** `requireRole()` middleware + customer row-scope helper
+- [x] 🔴 **M1** `POST /users/staff` (ADMIN only)
 - [ ] 🔴 **M3** Login, Signup (live rule checklist), Forgot/Reset pages
 - [ ] 🔴 **M3** Layout shell + role-based sidebar + route guards
-- [ ] 🟡 **M1** Rate-limit login (5/min/IP)
+- [x] 🟡 **M1** Rate-limit login (5/min/IP)
 
 ---
 
 ## Phase 2 — Master Data (Hour 4–10) · Module 2 & 5 (config)
 
-- [ ] 🔴 **M1** Products CRUD (name, type, sales price, cost price, notes)
-- [ ] 🔴 **M1** Variants CRUD (attribute, value, surcharge) — seed Brand=Odoo → +560
-- [ ] 🔴 **M1** Plans CRUD (interval, price, min qty, valid_from/to, 4 lifecycle flags)
-- [ ] 🔴 **M1** Tax rules CRUD (admin-defined, % rate, applicable scope)
+- [x] 🔴 **M1** Products CRUD (name, type, sales price, cost price, notes)
+- [x] 🔴 **M1** Variants CRUD (attribute, value, surcharge) — seed Brand=Odoo → +560
+- [x] 🔴 **M1** Plans CRUD (interval, price, min qty, valid_from/to, 4 lifecycle flags)
+- [x] 🔴 **M1** Tax rules CRUD (admin-defined, % rate, applicable scope)
 - [ ] 🔴 **M2** Discounts CRUD + evaluator function (see Phase 4)
 - [ ] 🔴 **M3** Admin UI: Products/Variants, Plans, Taxes, Discounts, Staff
 - [ ] 🔴 **M3** Price preview widget (base + variant surcharge) on product form
@@ -47,7 +47,7 @@
 
 ## Phase 3 — Quotation & Subscription Lifecycle (Hour 10–16) · Module 3
 
-- [ ] 🔴 **M1** Quotation Templates CRUD (plan, lines, `validity_days`)
+- [x] 🔴 **M1** Quotation Templates CRUD (plan, lines, `validity_days`)
 - [ ] 🔴 **M2** `createSubscriptionFromTemplate()` with auto `SUB-xxxxx` numbering
 - [ ] 🔴 **M2** Subscription line calc: unit price + variant surcharge, tax, subtotal
 - [ ] 🔴 **M2** State machine: `DRAFT→QUOTATION→CONFIRMED→ACTIVE→CLOSED` + `PAUSED` branch; illegal jump → `409`
