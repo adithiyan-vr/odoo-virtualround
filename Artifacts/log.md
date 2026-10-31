@@ -153,6 +153,17 @@
 - Wrote 18 comprehensive Vitest unit tests covering password policy, token hashing, JWT sessions, date intervals, month-end date math, money precision, and rate limiting. 100% passing.
 - Verified Next.js production build (`npm run build`) compiling all 25 API routes with 0 errors.
 
+### 2026-10-31 · M3 · FEATURE · Complete Design System, Auth Screens, Admin ERP & Subscription Lifecycle UI
+- Built design system foundations matching DESIGN.md: tokens in globals.css (orange #FF6A1A, amber #FFC83D, ink-950 #0E0E0E neutrals, semantic colors), Urbanist & Inter font integration, and custom utilities (.hero-glow, tabular numerals).
+- Auth UI (/login, /signup, /forgot-password, /reset-password): live password policy checklist validating 9+ characters, uppercase, lowercase, and special character with immediate visual green feedback; mock /dev/mailbox helper; one-click demo login buttons.
+- Layout Shell (AppShell): ink-950 outer frame, 248px dark sidebar (ink-900), role-aware navigation (Admin vs Staff), active orange icon tiles, topbar with global search pill & live cycle indicator, and sidebar Billing Day batch card.
+- UI Component Library (src/components/ui/): Button (pill variants: primary, accent, secondary, ghost, destructive), Input, Select, Textarea, Card, Badge, Modal, Tabs, and Toast system with custom notification and batch billing result links.
+- Shared Composites (src/components/shared/): StatusPill with comprehensive mapping per §6.3, StatusRibbon (Draft › Quotation › Confirmed › Active › Closed with Done=muted, Current=dark-blue with orange dot, Paused badge), DataTable with search, filter chips, server-side pagination, skeleton loading, and empty states; ConfirmDialog, LineEditor, PolicyChips, UsageMeter, PricePreview, and BillingModal.
+- Module 2 (UI): Products & Variants management (/products, /products/new, /products/[id]) with Brand=Odoo (+₹560) preset and live PricePreview widget; Subscription Plans (/plans, /plans/new, /plans/[id]) with 4 lifecycle policy toggles (autoClose, canCloseEarly, canPause, canRenew); Quotation Templates (/templates, /templates/new, /templates/[id]) with multi-line bundles; Tax Rules (/taxes) and Payment Terms (/payment-terms) with modal editors; Staff Management (/staff) with policy-checked account creation; and Customers Directory (/customers).
+- Module 3 (UI): Subscriptions & Quotations Lifecycle (/subscriptions, /subscriptions/new, /subscriptions/[id]) featuring template auto-fill, plan fee handling, state machine action buttons (send_quotation, confirm, activate, pause, resume, renew, close), tabbed detail views (Overview, Lines, Invoices, Activity), and plan policy guard checks.
+- Module 4 & 5 (UI): Customer Invoices (/invoices, /invoices/[id]) with status ribbon (Draft › Confirmed › Paid), overdue pills, action buttons (Confirm, Cancel, Send email, Print), Payment history card with integrated PaymentModal, and clean printable A4 format (/print/invoice/[id]); Promotional Discounts (/discounts, /discounts/new, /discounts/[id]) with usage limit meters and auto-apply toggles; and Executive Billing Modal with idempotency assurances.
+- Added client-side formatting tests (tests/format.test.ts). Verified 21/21 passing tests and full production build (npm run build) compiling all 48 routes with 0 errors.
+
 <!-- Append new entries below this line -->
 
 ---
