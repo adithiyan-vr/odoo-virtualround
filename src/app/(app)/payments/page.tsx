@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { invoiceApi, type Payment } from '@/lib/api-client';
+import { paymentApi, invoiceApi, type Payment } from '@/lib/api-client';
 import { DataTable, type Column } from '@/components/shared/data-table';
 import { StatusPill } from '@/components/shared/status-pill';
 import { formatMoney, formatDate } from '@/lib/format';
@@ -16,6 +16,14 @@ export default function PaymentsPage() {
     async function loadPayments() {
       setIsLoading(true);
       try {
+        // Try calling the dedicated payments endpoint
+        const res = await paymentApi.getPayments({ pageSize: 50 });
+        if (res && res.payments && res.payments.length > 0) {
+          setPayments(res.payments as any);
+          return;
+        }
+
+        // Fallback: collect payments from invoices
         const invRes = await invoiceApi.getInvoices();
         const allPayments: Payment[] = [];
         for (const inv of invRes.data || []) {
@@ -38,9 +46,10 @@ export default function PaymentsPage() {
       key: 'method',
       header: 'Payment Method',
       render: (p) => {
-        const icons = {
+        const icons: Record<string, React.ReactNode> = {
           UPI: <QrCode className="w-3.5 h-3.5" />,
           BANK: <Landmark className="w-3.5 h-3.5" />,
+          BANK_TRANSFER: <Landmark className="w-3.5 h-3.5" />,
           CARD: <CreditCard className="w-3.5 h-3.5" />,
           CASH: <Banknote className="w-3.5 h-3.5" />,
           CHEQUE: <FileCheck className="w-3.5 h-3.5" />,
@@ -123,4 +132,3 @@ export default function PaymentsPage() {
     </div>
   );
 }
-

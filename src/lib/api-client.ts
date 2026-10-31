@@ -1063,3 +1063,194 @@ export const billingApi = {
   },
 };
 
+
+
+// -------------------------------------------------------------
+// MODULE 6 & 7: PAYMENTS, DASHBOARD & CUSTOMER PORTAL (M4)
+// -------------------------------------------------------------
+
+export interface DashboardSummary {
+  activeSubscriptions: number;
+  mrr: number;
+  revenueCollected: number;
+  totalPaymentsCount: number;
+  totalInvoiced: number;
+  outstandingAmount: number;
+  outstandingCount: number;
+  overdueCount: number;
+  overdueAmount: number;
+  generatedInMs: number;
+}
+
+export interface MonthlyRevenueData {
+  month: string;
+  collected: number;
+  invoiced: number;
+}
+
+export interface SubscriptionStatusData {
+  status: SubscriptionStatus;
+  count: number;
+}
+
+export const paymentApi = {
+  async recordPayment(data: {
+    invoiceId: string;
+    amount: number;
+    method: 'BANK' | 'CARD' | 'CASH' | 'UPI' | 'CHEQUE' | 'BANK_TRANSFER' | 'OTHER';
+    paymentDate: string;
+    reference?: string;
+    note?: string;
+  }) {
+    const res = await request<any>('/payments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  },
+
+  async getPayments(params: {
+    invoiceId?: string;
+    customerId?: string;
+    method?: string;
+    from?: string;
+    to?: string;
+    q?: string;
+    page?: number;
+    pageSize?: number;
+  } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.invoiceId) searchParams.set('invoiceId', params.invoiceId);
+    if (params.customerId) searchParams.set('customerId', params.customerId);
+    if (params.method) searchParams.set('method', params.method);
+    if (params.from) searchParams.set('from', params.from);
+    if (params.to) searchParams.set('to', params.to);
+    if (params.q) searchParams.set('q', params.q);
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+
+    const qs = searchParams.toString();
+    const res = await request<{ payments: Payment[]; meta: any }>(`/payments${qs ? `?${qs}` : ''}`);
+    return res.data;
+  },
+
+  async getInvoicePayments(invoiceId: string) {
+    const res = await request<Payment[]>(`/invoices/${invoiceId}/payments`);
+    return res.data;
+  },
+
+  async voidPayment(paymentId: string) {
+    const res = await request<any>(`/payments/${paymentId}/void`, {
+      method: 'POST',
+    });
+    return res.data;
+  },
+};
+
+export const dashboardApi = {
+  async getSummary(filters: {
+    from?: string;
+    to?: string;
+    planId?: string;
+    customerId?: string;
+    status?: string;
+  } = {}): Promise<DashboardSummary> {
+    const searchParams = new URLSearchParams();
+    if (filters.from) searchParams.set('from', filters.from);
+    if (filters.to) searchParams.set('to', filters.to);
+    if (filters.planId) searchParams.set('planId', filters.planId);
+    if (filters.customerId) searchParams.set('customerId', filters.customerId);
+    if (filters.status) searchParams.set('status', filters.status);
+
+    const qs = searchParams.toString();
+    const res = await request<DashboardSummary>(`/dashboard/summary${qs ? `?${qs}` : ''}`);
+    return res.data;
+  },
+
+  async getRevenueMonthly(): Promise<MonthlyRevenueData[]> {
+    const res = await request<MonthlyRevenueData[]>('/dashboard/revenue-monthly');
+    return res.data;
+  },
+
+  async getSubscriptionStatus(): Promise<SubscriptionStatusData[]> {
+    const res = await request<SubscriptionStatusData[]>('/dashboard/subscription-status');
+    return res.data;
+  },
+
+  async getOverdue(params: { page?: number; pageSize?: number } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+
+    const qs = searchParams.toString();
+    const res = await request<{ invoices: any[]; meta: any }>(`/dashboard/overdue${qs ? `?${qs}` : ''}`);
+    return res.data;
+  },
+
+  async getRecentPayments(limit: number = 10) {
+    const res = await request<any[]>(`/dashboard/payments-recent?limit=${limit}`);
+    return res.data;
+  },
+};
+
+export const portalApi = {
+  async getSubscriptions(params: { page?: number; pageSize?: number } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+
+    const qs = searchParams.toString();
+    const res = await request<{ subscriptions: any[]; meta: any }>(`/portal/subscriptions${qs ? `?${qs}` : ''}`);
+    return res.data;
+  },
+
+  async getSubscriptionDetail(id: string) {
+    const res = await request<any>(`/portal/subscriptions/${id}`);
+    return res.data;
+  },
+
+  async requestSubscriptionAction(id: string, action: 'PAUSE' | 'RESUME' | 'CLOSE', reason?: string) {
+    const res = await request<any>(`/portal/subscriptions/${id}/request`, {
+      method: 'POST',
+      body: JSON.stringify({ action, reason }),
+    });
+    return res.data;
+  },
+
+  async getInvoices(params: { status?: string; page?: number; pageSize?: number } = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set('status', params.status);
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+
+    const qs = searchParams.toString();
+    const res = await request<{ invoices: any[]; meta: any }>(`/portal/invoices${qs ? `?${qs}` : ''}`);
+    return res.data;
+  },
+
+  async getInvoiceDetail(id: string) {
+    const res = await request<any>(`/portal/invoices/${id}`);
+    return res.data;
+  },
+
+  async payInvoice(invoiceId: string, data: { amount: number; method: string; reference?: string; note?: string }) {
+    const res = await request<any>(`/portal/invoices/${invoiceId}/pay`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  },
+
+  async getProfile() {
+    const res = await request<any>('/portal/profile');
+    return res.data;
+  },
+
+  async updateProfile(data: any) {
+    const res = await request<any>('/portal/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return res.data;
+  },
+};

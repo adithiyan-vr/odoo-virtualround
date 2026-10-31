@@ -236,10 +236,10 @@ export class DiscountService {
       where: {
         isActive: true,
         startDate: { lte: invoiceDate },
-        OR: [{ endDate: null }, { endDate: { gte: invoiceDate } }],
-        ...(attachedDiscountId
-          ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] }
-          : { autoApply: true }),
+        AND: [
+          { OR: [{ endDate: null }, { endDate: { gte: invoiceDate } }] },
+          attachedDiscountId ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] } : { autoApply: true },
+        ],
       },
       include: INCLUDE,
     });
