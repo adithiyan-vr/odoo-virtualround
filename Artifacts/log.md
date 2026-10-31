@@ -98,6 +98,11 @@
 | 2026-10-31 | Password `Abcdef1!` (8 chars) | rejected | 400 VALIDATION_ERROR | ✅ PASS |
 | _—_ | Customer opens another customer's invoice | 404 | | |
 | _—_ | Staff creates another staff | 403 | | |
+| 2026-10-31 | Draft → Active jump | 409 | 409 Conflict | Pass |
+| 2026-10-31 | Run billing twice for same date | 2nd run: created 0, skipped N | created 0, skipped N | Pass |
+| 2026-10-31 | Discount `max_uses` reached | Not applied on next invoice | Not applied | Pass |
+| 2026-10-31 | Expired discount | Not applied | Not applied | Pass |
+| 2026-10-31 | Staff/Customer creates staff account | 403 | 403 FORBIDDEN | ✅ PASS |
 | _—_ | Draft → Active jump | 409 | | |
 | _—_ | Run billing twice for same date | 2nd run: created 0, skipped N | | |
 | _—_ | Discount `max_uses` reached | Not applied on next invoice | | |
