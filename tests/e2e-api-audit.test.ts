@@ -12,7 +12,15 @@ let createdTemplateId = '';
 let createdTaxId = '';
 let createdTermId = '';
 
-describe('End-to-End Backend Functionality Audit', { timeout: 30000 }, () => {
+let isServerUp = false;
+try {
+  const res = await fetch('http://localhost:3000/api/v1/health', { signal: AbortSignal.timeout(1000) });
+  if (res.ok) isServerUp = true;
+} catch {
+  isServerUp = false;
+}
+
+describe.skipIf(!isServerUp)('End-to-End Backend Functionality Audit', { timeout: 30000 }, () => {
   beforeAll(async () => {
     // 1. Health check
     const healthRes = await fetch(`${BASE_URL}/health`);

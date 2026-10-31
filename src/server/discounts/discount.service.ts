@@ -244,6 +244,7 @@ export class DiscountService {
         startDate: { lte: invoiceDate },
         AND: [
           { OR: [{ endDate: null }, { endDate: { gte: invoiceDate } }] },
+          attachedDiscountId ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] } : { autoApply: true },
           attachedDiscountId
             ? { OR: [{ id: attachedDiscountId }, { autoApply: true }] }
             : { autoApply: true },

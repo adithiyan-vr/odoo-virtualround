@@ -77,23 +77,23 @@
 
 ## Phase 5 — Payments, Overdue & Finance Dashboard (Hour 22–26) · Module 6 & 7
 
-- [ ] 🔴 **M4** `POST /payments` (method, amount, date, note, invoice) — only on CONFIRMED invoices
-- [ ] 🔴 **M4** Auto-flip invoice to `PAID` when sum(payments) ≥ total; block overpayment
-- [ ] 🔴 **M4** Overdue query + red "Overdue" badge + filter
-- [ ] 🔴 **M4** `GET /dashboard/summary` using SQL `COUNT/SUM ... FILTER`
-- [ ] 🔴 **M4** KPI cards: Active subs, Revenue collected, Outstanding, Overdue
-- [ ] 🔴 **M4** Monthly revenue bar chart + status pie chart (recharts)
-- [ ] 🔴 **M4** Filters: date range, plan, customer, invoice status
-- [ ] 🔴 **M4** Server-side pagination (default 25) on every list
-- [ ] 🔴 **M4** Customer portal: own subscriptions + invoices + print
+- [x] 🔴 **M4** `POST /payments` (method, amount, date, note, invoice) — only on CONFIRMED invoices
+- [x] 🔴 **M4** Auto-flip invoice to `PAID` when sum(payments) ≥ total; block overpayment
+- [x] 🔴 **M4** Overdue query + red "Overdue" badge + filter
+- [x] 🔴 **M4** `GET /dashboard/summary` using SQL `COUNT/SUM ... FILTER`
+- [x] 🔴 **M4** KPI cards: Active subs, Revenue collected, Outstanding, Overdue
+- [x] 🔴 **M4** Monthly revenue bar chart + status pie chart (recharts)
+- [x] 🔴 **M4** Filters: date range, plan, customer, invoice status
+- [x] 🔴 **M4** Server-side pagination (default 25) on every list
+- [x] 🔴 **M4** Customer portal: own subscriptions + invoices + print
 - [x] 🟡 **M3** Payment modal inside invoice detail (uses M4 API)
 
 ---
 
 ## Phase 6 — Scale, Polish & Demo (Hour 26–30)
 
-- [ ] 🔴 **M4** `seed.ts`: 5,000+ subscriptions, 10,000+ invoices, payments; demo accounts `admin@`, `staff@`, `customer@brightloop.io`
-- [ ] 🔴 **M4** Measure & record dashboard + list endpoint timings (< 2s) in `log.md`
+- [x] 🔴 **M4** `seed.ts` & `seed-volume.ts`: 5,000+ subscriptions, 10,000+ invoices, payments; demo accounts `admin@`, `staff@`, `customer@brightloop.io`
+- [x] 🔴 **M4** Measure & record dashboard + list endpoint timings (< 2s) in `log.md`
 - [ ] 🔴 **M1** Verify indexes with `EXPLAIN ANALYZE` on slow queries
 - [x] 🔴 **M3** UI consistency pass (spacing, colours, empty/loading/error states) against `design.md`
 - [x] 🔴 **M3** Responsive check (laptop + mobile for portal)

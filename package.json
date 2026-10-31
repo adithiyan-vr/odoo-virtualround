@@ -14,6 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:volume": "tsx scripts/seed-volume.ts",
+    "perf:benchmark": "tsx scripts/perf-benchmark.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
