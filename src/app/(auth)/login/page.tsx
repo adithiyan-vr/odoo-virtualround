@@ -27,11 +27,8 @@ export default function LoginPage() {
     try {
       const user = await login(email, password);
       toast.success('Welcome back!', `Logged in as ${user.name}`);
-      if (user.role === 'CUSTOMER') {
-        router.push('/portal');
-      } else {
-        router.push('/dashboard');
-      }
+      // Full page redirect ensures new cookie is immediately verified by middleware
+      window.location.href = user.role === 'CUSTOMER' ? '/portal' : '/dashboard';
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid email or password';
       setErrorMessage(msg);
@@ -44,13 +41,13 @@ export default function LoginPage() {
   const handleDemoFill = (role: 'admin' | 'staff' | 'customer') => {
     if (role === 'admin') {
       setEmail('admin@brightloop.io');
-      setPassword('Admin#12345');
+      setPassword('Admin@12345');
     } else if (role === 'staff') {
       setEmail('staff@brightloop.io');
-      setPassword('Staff#12345');
+      setPassword('Staff@12345');
     } else {
       setEmail('customer@brightloop.io');
-      setPassword('Customer#12345');
+      setPassword('Customer@12345');
     }
   };
 

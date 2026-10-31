@@ -85,12 +85,12 @@ export async function getSession(req: Request): Promise<SessionPayload | null> {
 }
 
 export function getSessionCookieHeader(token: string): string {
-  const isProd = process.env.NODE_ENV === 'production';
+  const isSecure = process.env.NODE_ENV === 'production' && process.env.APP_URL?.startsWith('https');
   const ttlSeconds = parseInt(process.env.SESSION_TTL_HOURS || '8', 10) * 3600;
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${ttlSeconds}${isProd ? '; Secure' : ''}`;
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${ttlSeconds}${isSecure ? '; Secure' : ''}`;
 }
 
 export function getClearSessionCookieHeader(): string {
-  const isProd = process.env.NODE_ENV === 'production';
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${isProd ? '; Secure' : ''}`;
+  const isSecure = process.env.NODE_ENV === 'production' && process.env.APP_URL?.startsWith('https');
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${isSecure ? '; Secure' : ''}`;
 }

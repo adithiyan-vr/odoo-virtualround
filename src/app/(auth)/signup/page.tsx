@@ -42,7 +42,7 @@ export default function SignupPage() {
     try {
       await signup(name, email, password);
       toast.success('Account Created!', 'Welcome to Brightloop customer portal');
-      router.push('/portal');
+      window.location.href = '/portal';
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed. Email may already be in use.';
       setErrorMessage(msg);
@@ -50,6 +50,14 @@ export default function SignupPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDemoFill = () => {
+    const suffix = Date.now().toString().slice(-4);
+    setName('Asha Kumar');
+    setEmail(`asha.${suffix}@brightloop.io`);
+    setPassword('SecurePass123!');
+    setErrorMessage('');
   };
 
   const passwordRules = [
@@ -174,6 +182,26 @@ export default function SignupPage() {
               Create Account <ArrowRight className="w-4 h-4" />
             </Button>
           </form>
+
+          {/* Quick Demo Signup Helper */}
+          <div className="mt-6 p-4 rounded-2xl bg-[#F7F7F5] border border-[#E7E7E3] text-left space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0E0E0E]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#FF6A1A]" />
+                <span>Quick Test Account</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleDemoFill}
+                className="px-2.5 py-1 text-xs font-semibold rounded-full bg-white border border-[#E7E7E3] hover:border-[#0E0E0E] text-[#0E0E0E] cursor-pointer"
+              >
+                Auto-Fill Valid Details
+              </button>
+            </div>
+            <p className="text-[11px] text-[#6B6B6B]">
+              Populates a unique email and password satisfying all 4 security criteria.
+            </p>
+          </div>
 
           <div className="mt-6 text-center text-xs text-[#6B6B6B]">
             By signing up, you agree to Brightloop&apos;s Terms of Service and Privacy Policy.

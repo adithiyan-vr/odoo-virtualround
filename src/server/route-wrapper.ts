@@ -73,7 +73,10 @@ export function route<TBody = unknown, TQuery = unknown, TParams = Record<string
         if (origin && host) {
           try {
             const originHost = new URL(origin).host;
-            if (originHost !== host) {
+            const isLoopbackMatch =
+              (originHost.startsWith('localhost') || originHost.startsWith('127.0.0.1')) &&
+              (host.startsWith('localhost') || host.startsWith('127.0.0.1'));
+            if (originHost !== host && !isLoopbackMatch) {
               return errorResponse(AppError.forbidden('Cross-origin request blocked'));
             }
           } catch {
